@@ -27,7 +27,7 @@ const Login = () => {
   return (
     <View style={styles.root}>
       <Textinput Label="Username/email" />
-      <Textinput Label="Password" />
+      <Textinput Label="Password" password/>
       <Pressable style={styles.submitbtn}>
         <Text
           style={{
