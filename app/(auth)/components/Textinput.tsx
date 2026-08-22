@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput, Pressable } from "react-native";
+import { View, Text, StyleSheet, TextInput } from "react-native";
 import useTheme from "@/hooks/useTheme";
 import Animated, {
   SnappySpringConfig,
@@ -7,23 +7,23 @@ import Animated, {
   useAnimatedStyle,
 } from "react-native-reanimated";
 import { useState } from "react";
-import { Ionicons } from "@expo/vector-icons";
 
 type TextInputProps = {
   Label: string;
   password?: boolean;
+  value:string;
+  setValue: (value:string) => void
 };
 
 const Textinput = (props: TextInputProps) => {
   const top = useSharedValue(23);
   const { colors } = useTheme();
-  const [inputValue, setInputValue] = useState("");
 
   const animateLabelOnFocus = () => {
     top.value = withSpring(6);
   };
   const animateLabelOnBlur = () => {
-    inputValue || (top.value = withSpring(23, SnappySpringConfig));
+    props.value || (top.value = withSpring(23, SnappySpringConfig));
   };
 
   const labelStyle = useAnimatedStyle(() => {
@@ -43,14 +43,7 @@ const Textinput = (props: TextInputProps) => {
       borderBottomWidth: 1,
       width: 350,
       marginVertical: 15,
-    },
-    // inputField: {
-    //   flexDirection: "row",
-    //   alignItems: "flex-end",
-    //   borderBottomColor: colors.primary,
-    //   borderBottomWidth: 1,
-    //   width: 350,
-    // },
+    }
   });
 
   return (
@@ -69,10 +62,10 @@ const Textinput = (props: TextInputProps) => {
         <TextInput
           style={styles.input}
           cursorColor={colors.accent}
-          onChangeText={setInputValue}
+          onChangeText={props.setValue}
           onFocus={animateLabelOnFocus}
           onBlur={animateLabelOnBlur}
-          value={inputValue}
+          value={props.value}
           secureTextEntry={props.password ? true : false}
         />
       </View>

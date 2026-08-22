@@ -7,6 +7,7 @@ import {
 } from "react";
 import { ColorsType, dark_colors, light_colors } from "../themes/colors";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useColorScheme } from "react-native";
 
 interface ThemeContextType {
   isDarkMode: boolean;
@@ -17,12 +18,18 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [isDarkMode, setDarkMode] = useState(false);
+
+
+  const [isDarkMode, setDarkMode] = useState(true);
+  const deviceTheme  = useColorScheme();
+
+
   useEffect(() => {
     AsyncStorage.getItem("isDarkMode").then((value) => {
-      if (value) setDarkMode(JSON.parse(value));
+      if (value) setDarkMode(JSON.parse(value))
+      else setDarkMode(deviceTheme==='dark')
     });
-  }, []);
+  }, [deviceTheme]);
 
   const toggleDarkMode = async() => {
     let newMode = !isDarkMode

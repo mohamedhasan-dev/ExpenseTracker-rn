@@ -2,9 +2,14 @@ import { View, Text, StyleSheet, Pressable } from "react-native";
 import useTheme from "@/hooks/useTheme";
 import { Link } from "expo-router";
 import Textinput from "./components/Textinput";
+import login from "./services/login";
+import { useState } from "react";
 
 const Login = () => {
   const { colors } = useTheme();
+  const [name, setName] = useState("");
+  const [pword, setPword] = useState("");
+  const [isLoading,setLoading] = useState(false)
 
   const styles = StyleSheet.create({
     root: {
@@ -26,9 +31,11 @@ const Login = () => {
 
   return (
     <View style={styles.root}>
-      <Textinput Label="Username/email" />
-      <Textinput Label="Password" password/>
-      <Pressable style={styles.submitbtn}>
+      <Textinput Label="Username/email" value={name} setValue={setName}/>
+      <Textinput Label="Password" password value={pword} setValue={setPword}/>
+      <Pressable style={styles.submitbtn} onPress={()=>{
+        login(name,pword,setLoading)
+      }}>
         <Text
           style={{
             color: "hsl(355, 53%, 24%",
@@ -36,7 +43,7 @@ const Login = () => {
             fontWeight: "bold",
           }}
         >
-          LogIn
+          { isLoading ? "Loading..." : "Login" }
         </Text>
       </Pressable>
       <Text
@@ -45,17 +52,18 @@ const Login = () => {
           marginTop: 15,
           color: colors.primary,
           fontWeight: "300",
+          textAlign: "center",
         }}
       >
-        don&apos;t have an account:
+        don&apos;t have an account:{"\n"}
         <Link
           href={"/(auth)/Signup"}
           style={{
             color: colors.accent,
-            fontWeight: "500",
+            fontWeight: "400",
           }}
         >
-          Login
+          Create Account
         </Link>
       </Text>
     </View>
