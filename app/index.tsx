@@ -6,5 +6,6 @@ export default function Index() {
     <ThemeProvider>
       <App />
     </ThemeProvider>
+
   );
 }

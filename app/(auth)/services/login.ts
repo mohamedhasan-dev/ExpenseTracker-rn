@@ -1,12 +1,9 @@
-
 export default async function login(
   nameoremail: string,
   password: string,
-  setLoading: (arg:boolean) => void
-): Promise<any> {
+): Promise<string | false> {
   try {
-    setLoading(true)
-    const res = await fetch("http://10.183.217.54:5001/login", {
+    const res = await fetch("http://10.136.47.54:5001/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -16,14 +13,16 @@ export default async function login(
         password,
       }),
     });
-    const isSucces:string = await res.json()
-    setLoading(false)
-    if (isSucces.toLowerCase() === 'success') {
-        return true
-    } return false
+    if (!res.ok) {
+      return false;
+    }
+    const token = await res.json();
+    if (token.token) {
+      return token.token;
+    }
+    return false;
   } catch (error) {
     console.error(error);
-    console.log(`from login API ${nameoremail} ${password}`);
-    return false
+    return false;
   }
 }

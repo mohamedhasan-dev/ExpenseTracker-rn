@@ -6,13 +6,13 @@ import Animated, {
   withSpring,
   useAnimatedStyle,
 } from "react-native-reanimated";
-import { useState } from "react";
 
 type TextInputProps = {
   Label: string;
   password?: boolean;
   value:string;
-  setValue: (value:string) => void
+  isWrongCred:boolean;
+  setValue: (value:string) => void;
 };
 
 const Textinput = (props: TextInputProps) => {
@@ -39,7 +39,7 @@ const Textinput = (props: TextInputProps) => {
     },
     input: {
       color: colors.text,
-      borderBottomColor: colors.primary,
+      borderBottomColor: props.isWrongCred ? "red" : colors.primary,
       borderBottomWidth: 1,
       width: 350,
       marginVertical: 15,
@@ -51,7 +51,7 @@ const Textinput = (props: TextInputProps) => {
       <Animated.View style={[styles.inputlabel, labelStyle]}>
         <Text
           style={{
-            color: colors.secondary,
+            color: props.isWrongCred ? "red" : colors.secondary,
             fontSize: 13,
           }}
         >

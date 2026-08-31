@@ -2,15 +2,32 @@ import { View, Text, StyleSheet, Pressable } from "react-native";
 import useTheme from "@/hooks/useTheme";
 import { Link } from "expo-router";
 import Textinput from "./components/Textinput";
-import login from "./services/login";
 import { useState } from "react";
+import useAuth from "@/hooks/useAuth";
 
 const Login = () => {
   const { colors } = useTheme();
   const [name, setName] = useState("");
   const [pword, setPword] = useState("");
-  const [isLoading,setLoading] = useState(false)
+  const [isLoading, setLoading] = useState(false);
+  const [isWorngCred,setWrongCred] = useState(false)
 
+  const { login } = useAuth();
+
+  const handleLogin = async () => {
+    setLoading(true);
+    try {
+      const token = await login(name, pword);
+      if (token) {
+        setWrongCred(false)
+        return token;
+      } setWrongCred(true)
+    } catch (e) {
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
   const styles = StyleSheet.create({
     root: {
       backgroundColor: colors.background,
@@ -31,11 +48,9 @@ const Login = () => {
 
   return (
     <View style={styles.root}>
-      <Textinput Label="Username/email" value={name} setValue={setName}/>
-      <Textinput Label="Password" password value={pword} setValue={setPword}/>
-      <Pressable style={styles.submitbtn} onPress={()=>{
-        login(name,pword,setLoading)
-      }}>
+      <Textinput Label="Username/email" value={name} setValue={setName} isWrongCred={isWorngCred}/>
+      <Textinput Label="Password" password value={pword} setValue={setPword} isWrongCred={isWorngCred}/>
+      <Pressable style={styles.submitbtn} onPress={handleLogin}>
         <Text
           style={{
             color: "hsl(355, 53%, 24%",
@@ -43,7 +58,7 @@ const Login = () => {
             fontWeight: "bold",
           }}
         >
-          { isLoading ? "Loading..." : "Login" }
+          {isLoading ? "Loading..." : "Login"}
         </Text>
       </Pressable>
       <Text
