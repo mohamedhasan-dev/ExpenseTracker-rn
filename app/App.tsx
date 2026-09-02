@@ -1,3 +1,4 @@
+import { SafeAreaView } from "react-native-safe-area-context";
 import useAuth from "../hooks/useAuth";
 import Login from "./(auth)/Login";
 import Dashboard from "./(pages)/Dashboard";
@@ -7,7 +8,11 @@ const App = () => {
   if (!authenticate.isAuthenticated) {
     return <Login />;
   }
-  return <Dashboard />;
+  return (
+    <SafeAreaView>
+      <Dashboard />
+    </SafeAreaView>
+  );
 };
 
 export default App;

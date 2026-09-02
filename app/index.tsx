@@ -3,9 +3,9 @@ import { ThemeProvider } from "@/hooks/useTheme";
 
 export default function Index() {
   return (
-    <ThemeProvider>
-      <App />
-    </ThemeProvider>
-
+    
+      <ThemeProvider>
+        <App />
+      </ThemeProvider>
   );
 }
