@@ -1,6 +1,7 @@
 export interface ColorsType {
     text : string,
     background : string,
+    surface: string,
     secondary : string,
     primary : string,
     accent : string
@@ -9,6 +10,7 @@ export interface ColorsType {
 export const dark_colors: ColorsType = {
     text : "hsl(186, 70%, 91%)",
     background : "hsl(210, 27%, 13%)",
+    surface: "hsla(207, 30%, 25%, 0.74)",
     secondary : "hsl(192, 73%, 30%)",
     primary : "hsl(198, 60%, 55%)",
     accent : "hsl(358, 47%, 50%)"
@@ -17,6 +19,7 @@ export const dark_colors: ColorsType = {
 export const light_colors: ColorsType = {
     text : "hsl(210, 26%, 15%)",
     background : "hsl(192, 65%, 91%)",
+    surface :"  ",  //specify the color
     secondary : "hsl(192, 73%, 30%)",
     primary : "hsl(198, 60%, 55%)",
     accent : "hsl(358, 47%, 50%)"
@@ -24,8 +27,9 @@ export const light_colors: ColorsType = {
 
 
 //dark
-//Text - hsl(186, 70%, 91%)
+//Text - hsl(186, 70%, 92%)
 //background - hsl(210, 27%, 13%)
+//Surface - hsla(207, 30%, 25%, 0.74)
 //secondary - hsl(192, 73%, 30%)
 //primary - hsl(198, 60%, 55%)
 //Accent - hsl(358, 47%, 50%)

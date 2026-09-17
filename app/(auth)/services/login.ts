@@ -3,7 +3,7 @@ export default async function login(
   password: string,
 ): Promise<string | false> {
   try {
-    const res = await fetch("http://10.136.47.54:5001/login", {
+    const res = await fetch("http://10.192.164.54:5001/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

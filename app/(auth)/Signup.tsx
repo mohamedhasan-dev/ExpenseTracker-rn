@@ -2,9 +2,13 @@ import { View, Text, StyleSheet, Pressable } from "react-native";
 import useTheme from "@/hooks/useTheme";
 import { Link } from "expo-router";
 import Textinput from "./components/Textinput";
+import { useState } from "react";
 
 const Login = () => {
   const { colors } = useTheme();
+  const [name,setName] = useState("");
+  const [email,setEmail] = useState("");
+  const [pword,setPword] = useState("");
 
   const styles = StyleSheet.create({
     root: {
@@ -26,8 +30,8 @@ const Login = () => {
 
   return (
     <View style={styles.root}>
-      <Textinput Label="Username/email" />
-      <Textinput Label="Password" password/>
+      <Textinput Label="Username/email" value={name} setValue={setName} isWrongCred={false}/>
+      <Textinput Label="Password" password value={email} setValue={setEmail} isWrongCred={false}/>
       <Pressable style={styles.submitbtn}>
         <Text
           style={{

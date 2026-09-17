@@ -1,7 +1,7 @@
 import { SafeAreaView } from "react-native-safe-area-context";
 import useAuth from "../hooks/useAuth";
 import Login from "./(auth)/Login";
-import Dashboard from "./(pages)/Dashboard";
+import Dashboard from "./(pages)/(dashboard)/Dashboard";
 
 const App = () => {
   const { authenticate } = useAuth();

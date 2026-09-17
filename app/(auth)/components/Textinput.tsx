@@ -6,24 +6,28 @@ import Animated, {
   withSpring,
   useAnimatedStyle,
 } from "react-native-reanimated";
+import { useState } from "react";
 
 type TextInputProps = {
   Label: string;
   password?: boolean;
-  value:string;
-  isWrongCred:boolean;
-  setValue: (value:string) => void;
+  value: string;
+  isWrongCred: boolean;
+  setValue: (value: string) => void;
 };
 
 const Textinput = (props: TextInputProps) => {
   const top = useSharedValue(23);
   const { colors } = useTheme();
+  const [focused, setFocused] = useState(false);
 
   const animateLabelOnFocus = () => {
-    top.value = withSpring(6);
+    top.value = withSpring(1);
+    setFocused(true);
   };
   const animateLabelOnBlur = () => {
     props.value || (top.value = withSpring(23, SnappySpringConfig));
+    setFocused(false);
   };
 
   const labelStyle = useAnimatedStyle(() => {
@@ -39,9 +43,14 @@ const Textinput = (props: TextInputProps) => {
     },
     input: {
       color: colors.text,
-      borderBottomColor: props.isWrongCred ? "red" : colors.primary,
+      fontSize:17,
+      borderBottomColor: props.isWrongCred
+        ? "red"
+        : focused
+          ? colors.primary
+          : colors.secondary,
       borderBottomWidth: 1,
-      width: 350,
+      width: 330,
       marginVertical: 15,
     }
   });
@@ -51,8 +60,9 @@ const Textinput = (props: TextInputProps) => {
       <Animated.View style={[styles.inputlabel, labelStyle]}>
         <Text
           style={{
-            color: props.isWrongCred ? "red" : colors.secondary,
-            fontSize: 13,
+            color: props.isWrongCred ? "red" : "hsl(192, 73%, 40%)",
+            fontSize: 15,
+            fontWeight: "bold",
           }}
         >
           {props.Label}
