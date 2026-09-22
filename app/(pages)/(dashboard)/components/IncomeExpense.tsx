@@ -103,7 +103,7 @@ const IncomeExpense = () => {
       </View>
       <View
         style={{
-          gap: 12,
+          gap: 14,
         }}
       >
         <View>
@@ -124,7 +124,7 @@ const IncomeExpense = () => {
             style={{
               fontSize: 12,
               color: colors.text,
-              opacity: 0.7,
+              opacity: 0.64,
             }}
           >
             {"50%"} of income spent
@@ -133,7 +133,7 @@ const IncomeExpense = () => {
             style={{
               fontSize: 12,
               color: colors.text,
-              opacity: 0.7,
+              opacity: 0.64,
             }}
           >
             {amount(799)} left
