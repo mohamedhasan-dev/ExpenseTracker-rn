@@ -22,6 +22,7 @@ const Login = () => {
   const { login } = useAuth();
 
   const handleLogin = async () => {
+    if (isLoading) return;
     setLoading(true);
     try {
       const token = await login(name, pword);
@@ -110,6 +111,7 @@ const Login = () => {
             styles.submitbtn,
           ]}
           onPress={handleLogin}
+          disabled={isLoading}
         >
           <Text
             style={{

@@ -13,7 +13,7 @@ const BlurCard = (props: BlurCardProps) => {
         borderWidth:1,
         borderColor:'hsla(0, 0%, 100%, 0.10)',
         overflow:'hidden',
-        backgroundColor:'hsla(0, 0%, 100%, 0.1)'
+        backgroundColor:'hsla(0, 0%, 100%, 0.05)'
     }]}>
       <BlurView intensity={20} tint="dark" style={[StyleSheet.absoluteFill]} />
       <View style={{ alignItems: "center" }}>{props.children}</View>

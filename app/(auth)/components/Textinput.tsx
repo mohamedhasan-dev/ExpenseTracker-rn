@@ -1,4 +1,10 @@
-import { View, Text, StyleSheet, TextInput } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  KeyboardTypeOptions,
+} from "react-native";
 import useTheme from "@/hooks/useTheme";
 import Animated, {
   SnappySpringConfig,
@@ -13,6 +19,7 @@ type TextInputProps = {
   password?: boolean;
   value: string;
   isWrongCred: boolean;
+  keyboardType?: KeyboardTypeOptions;
   setValue: (value: string) => void;
 };
 
@@ -77,6 +84,9 @@ const Textinput = (props: TextInputProps) => {
           onBlur={animateLabelOnBlur}
           value={props.value}
           secureTextEntry={props.password ? true : false}
+          keyboardType={props.keyboardType}
+          autoCapitalize="none"
+          autoCorrect={false}
         />
       </View>
     </View>

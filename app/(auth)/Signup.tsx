@@ -1,14 +1,49 @@
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import useTheme from "@/hooks/useTheme";
-import { Link } from "expo-router";
+import useAuth from "@/hooks/useAuth";
+import { router } from "expo-router";
 import Textinput from "./components/Textinput";
 import { useState } from "react";
 
-const Login = () => {
+const Signup = () => {
   const { colors } = useTheme();
-  const [name,setName] = useState("");
-  const [email,setEmail] = useState("");
-  const [pword,setPword] = useState("");
+  const { signup } = useAuth();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [pword, setPword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setLoading] = useState(false);
+
+  // Login lives on the index route (App.tsx shows it when logged out)
+  const goToLogin = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace("/");
+  };
+
+  const handleSignup = async () => {
+    if (isLoading) return;
+    if (!name.trim() || !email.trim() || !pword) {
+      setError("Please fill in all fields");
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      setError("Please enter a valid email");
+      return;
+    }
+    setError(null);
+    setLoading(true);
+    try {
+      const err = await signup(name.trim(), email.trim(), pword);
+      if (err) {
+        setError(err);
+        return;
+      }
+      // Logged in now; index route renders the Dashboard
+      router.replace("/");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const styles = StyleSheet.create({
     root: {
@@ -18,7 +53,6 @@ const Login = () => {
       alignItems: "center",
     },
     submitbtn: {
-      backgroundColor: colors.accent,
       width: 150,
       height: 50,
       alignItems: "center",
@@ -30,17 +64,49 @@ const Login = () => {
 
   return (
     <View style={styles.root}>
-      <Textinput Label="Username/email" value={name} setValue={setName} isWrongCred={false}/>
-      <Textinput Label="Password" password value={email} setValue={setEmail} isWrongCred={false}/>
-      <Pressable style={styles.submitbtn}>
+      <Textinput
+        Label="USERNAME"
+        value={name}
+        setValue={setName}
+        isWrongCred={false}
+      />
+      <Textinput
+        Label="EMAIL"
+        value={email}
+        setValue={setEmail}
+        keyboardType="email-address"
+        isWrongCred={false}
+      />
+      <Textinput
+        Label="PASSWORD"
+        password
+        value={pword}
+        setValue={setPword}
+        isWrongCred={false}
+      />
+      {error && (
+        <Text style={{ color: "red", fontSize: 14, marginTop: 4 }}>
+          {error}
+        </Text>
+      )}
+      <Pressable
+        style={({ pressed }) => [
+          {
+            backgroundColor: pressed ? "hsl(358, 46%, 38%)" : colors.accent,
+          },
+          styles.submitbtn,
+        ]}
+        onPress={handleSignup}
+        disabled={isLoading}
+      >
         <Text
           style={{
-            color: "hsl(355, 53%, 24%",
+            color: "hsl(355, 53%, 24%)",
             fontSize: 20,
             fontWeight: "bold",
           }}
         >
-          Create Account
+          {isLoading ? "Loading..." : "Create Account"}
         </Text>
       </Pressable>
       <Text
@@ -51,19 +117,19 @@ const Login = () => {
           fontWeight: "300",
         }}
       >
-        Already have an account:
-        <Link
-          href={"/(auth)/Login"}
+        Already have an account:{" "}
+        <Text
+          onPress={goToLogin}
           style={{
             color: colors.accent,
             fontWeight: "500",
           }}
         >
           Login
-        </Link>
+        </Text>
       </Text>
     </View>
   );
 };
 
-export default Login;
+export default Signup;
