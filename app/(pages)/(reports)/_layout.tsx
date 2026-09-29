@@ -1,10 +1,10 @@
 import { Stack } from "expo-router";
 
 export const unstable_settings = {
-  initialRouteName: "Login",
+  initialRouteName: "Reports",
 };
 
-export default function AuthLayout() {
+export default function Layout() {
   return (
     <Stack
       screenOptions={{

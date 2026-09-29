@@ -1,6 +1,7 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import React from "react";
 import useTheme from "@/hooks/useTheme";
+import { router } from "expo-router";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import amount from "../../services/amount";
 import { ColorsType } from "@/themes/colors";
@@ -57,7 +58,7 @@ const Recent_Transactions = ({ transactions }: RecentTransactionsProps) => {
     <View style={{ gap: 10 }}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>Recent</Text>
-        <Pressable hitSlop={8}>
+        <Pressable hitSlop={8} onPress={() => router.navigate("/Transactions")}>
           <Text style={[styles.see_all, { color: colors.accent }]}>
             See all
           </Text>

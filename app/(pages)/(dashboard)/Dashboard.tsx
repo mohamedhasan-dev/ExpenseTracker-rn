@@ -1,4 +1,5 @@
 import useFetch from "@/services/useFetch";
+import useAuth from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import useTheme from "@/hooks/useTheme";
 import { StyleSheet, Text, View, ScrollView } from "react-native";
@@ -51,6 +52,7 @@ const getGreeting = () => {
 
 const Dashboard = () => {
   const fetchAPI = useFetch();
+  const { authenticate } = useAuth();
   const { colors } = useTheme();
   const [user, setUser] = useState("");
   const month = new Date()
@@ -58,6 +60,8 @@ const Dashboard = () => {
     .toUpperCase();
 
   useEffect(() => {
+    // Skip while logged out (login is bypassed during UI work)
+    if (!authenticate.Token) return;
     const fetchUser = async () => {
       try {
         const response = await fetchAPI(`${API_URL}/users`, "GET");
@@ -69,7 +73,7 @@ const Dashboard = () => {
       }
     };
     fetchUser();
-  }, [fetchAPI]);
+  }, [fetchAPI, authenticate.Token]);
 
   return (
     <ScrollView
