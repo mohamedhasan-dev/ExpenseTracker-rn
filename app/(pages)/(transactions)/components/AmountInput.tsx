@@ -12,14 +12,16 @@ import { LinearGradient } from "expo-linear-gradient";
 
 interface AmountInputProps {
   onChange: (amount: number) => void;
-  initialValue?: string;
+  value?: string;
+  color?: string;
 }
 
 export const AmountInput: React.FC<AmountInputProps> = ({
   onChange,
-  initialValue = "",
+  value = "",
+  color,
 }) => {
-  const [rawValue, setRawValue] = useState(initialValue);
+  const [rawValue, setRawValue] = useState(value);
   const [isFocused, setIsFocused] = useState(false);
   const { colors } = useTheme();
   // 1. Custom Blinking Cursor Animation
@@ -125,16 +127,16 @@ export const AmountInput: React.FC<AmountInputProps> = ({
 
       {/* 5. The Horizontal Gradient/Glow Bar */}
       <LinearGradient
-        colors={["transparent", colors.accent, "transparent"]}
+        colors={["transparent", color || colors.accent, "transparent"]}
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
         style={[
           styles.horizontalBar,
           {
-            shadowColor: colors.accent,
+            shadowColor: color,
             shadowOffset: { width: 0, height: 0 },
             shadowOpacity: 0.8,
-            shadowRadius: 10,
+            shadowRadius: 8,
             elevation: 6,
           },
         ]}

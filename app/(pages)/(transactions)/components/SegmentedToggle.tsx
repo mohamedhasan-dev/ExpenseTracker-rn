@@ -14,9 +14,9 @@ import Animated, {
 } from "react-native-reanimated";
 
 interface SegmentedToggleProps {
-  options: string[];
-  activeOption: string;
-  onChange: (option: string) => void;
+  options: ('Expense' | 'Income')[];
+  activeOption: 'Expense' | 'Income';
+  onChange: (option: 'Expense' | 'Income') => void;
 }
 
 export const SegmentedToggle: React.FC<SegmentedToggleProps> = ({
