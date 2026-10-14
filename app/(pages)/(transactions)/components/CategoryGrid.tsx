@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { SelectableCard } from "./SelectableCard";
+import { SelectableCard } from "@/components/SelectableCard";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import useTheme from "@/hooks/useTheme";
 
@@ -87,6 +87,6 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between", // Pushes the 31% width cards nicely across the row
+    gap: 12,
   },
 });
