@@ -2,6 +2,7 @@ import useTheme from "@/hooks/useTheme";
 import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, StyleSheet } from "react-native";
 import Animated, {
+  cancelAnimation,
   useSharedValue,
   useAnimatedStyle,
   withRepeat,
@@ -10,91 +11,95 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 
+// Server limit is 99,999,999.99 -> at most 8 digits before the decimal point
+const MAX_INTEGER_DIGITS = 8;
+
+/** Numeric value of the raw text, 0 when empty */
+export const parseAmount = (raw: string) => {
+  const n = parseFloat(raw);
+  return Number.isFinite(n) ? n : 0;
+};
+
+/** Keeps digits and one ".", max 2 decimals and 8 integer digits */
+const sanitize = (text: string) => {
+  const clean = text.replace(/[^0-9.]/g, "");
+  const [rawInt = "", ...rest] = clean.split(".");
+  const hasDecimal = rest.length > 0;
+  let integer = rawInt.replace(/^0+(?=\d)/, "").slice(0, MAX_INTEGER_DIGITS);
+  if (integer === "" && hasDecimal) integer = "0";
+  return hasDecimal ? `${integer}.${rest.join("").slice(0, 2)}` : integer;
+};
+
 interface AmountInputProps {
-  onChange: (amount: number) => void;
-  value?: string;
+  /** Raw text, e.g. "1240.5" (kept as text so "12." survives while typing) */
+  value: string;
+  onChange: (raw: string) => void;
   color?: string;
 }
 
-export const AmountInput: React.FC<AmountInputProps> = ({
-  onChange,
-  value = "",
-  color,
-}) => {
-  const [rawValue, setRawValue] = useState(value);
+const AmountInput: React.FC<AmountInputProps> = ({ onChange, value, color }) => {
   const [isFocused, setIsFocused] = useState(false);
   const { colors } = useTheme();
-  // 1. Custom Blinking Cursor Animation
+  const tint = color ?? colors.accent;
+
+  // 1. Custom blinking cursor, only animated while the field is focused
   const cursorOpacity = useSharedValue(1);
 
   useEffect(() => {
-    cursorOpacity.value = withRepeat(
-      withSequence(
-        withTiming(0, { duration: 450 }),
-        withTiming(1, { duration: 450 }),
-      ),
-      -1, // Infinite loop
-      true, // Reverse direction
-    );
-  }, []);
+    if (isFocused) {
+      cursorOpacity.value = withRepeat(
+        withSequence(
+          withTiming(0, { duration: 450 }),
+          withTiming(1, { duration: 450 }),
+        ),
+        -1, // Infinite loop
+        true, // Reverse direction
+      );
+    } else {
+      cancelAnimation(cursorOpacity);
+      cursorOpacity.value = 1;
+    }
+  }, [isFocused, cursorOpacity]);
 
   const animatedCursorStyle = useAnimatedStyle(() => ({
     opacity: cursorOpacity.value,
   }));
 
-  const handleTextChange = (text: string) => {
-    let cleanText = text.replace(/[^0-9.]/g, "");
-
-    const parts = cleanText.split(".");
-    if (parts.length > 2) {
-      cleanText = parts[0] + "." + parts.slice(1).join("");
-    }
-    if (parts.length === 2 && parts[1].length > 2) {
-      cleanText = `${parts[0]}.${parts[1].slice(0, 2)}`;
-    }
-
-    setRawValue(cleanText);
-
-    const parsed = parseFloat(cleanText);
-    onChange(isNaN(parsed) ? 0 : parsed);
-  };
-
-  // 2. Splitting and formatting the integer and decimal parts
-  const parts = rawValue.split(".");
-  const integerPart = parts[0]
-    ? parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+  // 2. Splitting and formatting the integer and decimal parts (Indian grouping)
+  const [integerRaw = "", decimalRaw] = value.split(".");
+  const isEmpty = value === "";
+  const displayInteger = integerRaw
+    ? Number(integerRaw).toLocaleString("en-IN")
     : "0";
-  const hasDecimal = rawValue.includes(".");
-  const decimalPart = hasDecimal ? parts[1] : "";
-
-  // 3. Fallback for completely empty state
-  const isEmpty = rawValue === "";
-  const displayInteger = isEmpty ? "0" : integerPart;
-  const displayDecimal = isEmpty ? ".00" : hasDecimal ? `.${decimalPart}` : "";
+  const displayDecimal = isEmpty
+    ? ".00"
+    : decimalRaw !== undefined
+      ? `.${decimalRaw}`
+      : "";
 
   return (
     <View style={styles.container}>
       <Text style={[styles.label, { color: colors.text }]}>AMOUNT</Text>
 
-      {/* 4. Perfectly Centered Input Wrapper */}
+      {/* 3. Centered input wrapper */}
       <View style={styles.inputContainer}>
         {/* Visual Layer */}
         <View style={styles.displayRow}>
-          <Text style={[styles.currencySymbol, { color: colors.accent }]}>
-            ₹
-          </Text>
+          <Text style={[styles.currencySymbol, { color: tint }]}>₹</Text>
 
-          {/* Conditionally mute the integer '0' if there is no input */}
+          {/* Mute the integer '0' if there is no input */}
           <Text
             style={[
               styles.integerText,
-              { color: isEmpty ? colors.surface2 : colors.text },
+              { color: colors.text, opacity: isEmpty ? 0.35 : 1 },
             ]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
           >
             {displayInteger}
           </Text>
 
-          <Text style={[styles.decimalText, { color: colors.surface2 }]}>
+          <Text style={[styles.decimalText, { color: colors.text }]}>
             {displayDecimal}
           </Text>
 
@@ -103,10 +108,7 @@ export const AmountInput: React.FC<AmountInputProps> = ({
               style={[
                 styles.cursor,
                 animatedCursorStyle,
-                {
-                  backgroundColor: colors.accent,
-                  shadowColor: colors.accent,
-                },
+                { backgroundColor: tint, shadowColor: tint },
               ]}
             />
           )}
@@ -114,26 +116,27 @@ export const AmountInput: React.FC<AmountInputProps> = ({
 
         {/* Hidden Interaction Layer */}
         <TextInput
+          accessibilityLabel="Amount"
           style={styles.hiddenInput}
-          value={rawValue}
-          onChangeText={handleTextChange}
+          value={value}
+          onChangeText={(text) => onChange(sanitize(text))}
           keyboardType="decimal-pad"
           caretHidden={true} // Hides the oversized native cursor
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          maxLength={12}
+          maxLength={MAX_INTEGER_DIGITS + 3}
         />
       </View>
 
-      {/* 5. The Horizontal Gradient/Glow Bar */}
+      {/* 4. The Horizontal Gradient/Glow Bar */}
       <LinearGradient
-        colors={["transparent", color || colors.accent, "transparent"]}
+        colors={["transparent", tint, "transparent"]}
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
         style={[
           styles.horizontalBar,
           {
-            shadowColor: color,
+            shadowColor: tint,
             shadowOffset: { width: 0, height: 0 },
             shadowOpacity: 0.8,
             shadowRadius: 8,
@@ -167,6 +170,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-end", // Ensures the baselines of the different font sizes match up
     justifyContent: "center",
+    paddingHorizontal: 16,
   },
   currencySymbol: {
     fontSize: 28,
@@ -178,15 +182,17 @@ const styles = StyleSheet.create({
     fontSize: 56,
     fontWeight: "700",
     letterSpacing: 1,
+    flexShrink: 1,
   },
   decimalText: {
     fontSize: 32, // Smaller, muted decimals
     fontWeight: "600",
     marginBottom: 6, // Slight offset to align visually with the large integer baseline
+    opacity: 0.45,
   },
   cursor: {
     width: 3,
-    height: 48, // Properly proportioned cursor height
+    height: 48,
     marginLeft: 4,
     marginBottom: 4,
     borderRadius: 2,
@@ -207,3 +213,5 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
 });
+
+export default AmountInput;

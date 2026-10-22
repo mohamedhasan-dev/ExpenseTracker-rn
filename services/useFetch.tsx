@@ -7,7 +7,7 @@ function useFetch() {
   const { authenticate, logout } = useAuth();
 
   const fetchAPI = useCallback(
-    async (url: string, method: HttpMethod) => {
+    async (url: string, method: HttpMethod, body?: unknown) => {
       if (!authenticate.Token) {
         throw new Error("User is not authenticated");
       }
@@ -18,6 +18,7 @@ function useFetch() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${authenticate.Token}`,
         },
+        body: body === undefined ? undefined : JSON.stringify(body),
       });
 
       if (response.status === 401) {

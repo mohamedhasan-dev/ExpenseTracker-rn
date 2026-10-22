@@ -1,9 +1,10 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import useTheme from "@/hooks/useTheme";
-import { SelectableCard } from "@/components/SelectableCard";
+import SelectableCard from "@/components/SelectableCard";
 
-export type PaymentMethod = "UPI" | "Card" | "Cash" | "Bank";
+import type { PaymentMethod } from "@/services/queries";
+export type { PaymentMethod };
 
 // Removed icons from the array
 const PAYMENT_METHODS: { id: PaymentMethod; label: string }[] = [
@@ -14,11 +15,11 @@ const PAYMENT_METHODS: { id: PaymentMethod; label: string }[] = [
 ];
 
 interface PaymentSelectorProps {
-  selectedMethod: string;
-  onSelect: (method: string) => void;
+  selectedMethod: PaymentMethod;
+  onSelect: (method: PaymentMethod) => void;
 }
 
-export const PaymentSelector: React.FC<PaymentSelectorProps> = ({
+const PaymentSelector: React.FC<PaymentSelectorProps> = ({
   selectedMethod,
   onSelect,
 }) => {
@@ -64,3 +65,5 @@ const styles = StyleSheet.create({
     gap: 12,
   },
 });
+
+export default PaymentSelector;

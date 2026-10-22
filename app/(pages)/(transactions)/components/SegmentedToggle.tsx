@@ -13,41 +13,41 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 
-interface SegmentedToggleProps {
-  options: ('Expense' | 'Income')[];
-  activeOption: 'Expense' | 'Income';
-  onChange: (option: 'Expense' | 'Income') => void;
+interface SegmentedToggleProps<T extends string> {
+  options: readonly T[];
+  activeOption: T;
+  onChange: (option: T) => void;
 }
 
-export const SegmentedToggle: React.FC<SegmentedToggleProps> = ({
+const PADDING = 4;
+
+function SegmentedToggle<T extends string>({
   options,
   activeOption,
   onChange,
-}) => {
+}: SegmentedToggleProps<T>) {
   const { colors } = useTheme();
   const [containerWidth, setContainerWidth] = useState(0);
   const activeIndex = options.indexOf(activeOption);
+  const segmentWidth =
+    containerWidth > 0 ? (containerWidth - PADDING * 2) / options.length : 0;
 
   // Shared value tracks the position of the background pill
   const translateX = useSharedValue(0);
 
   useEffect(() => {
-    if (containerWidth > 0) {
-      const segmentWidth = (containerWidth - 8) / options.length; // -8 accounts for the 4px horizontal padding
+    if (segmentWidth > 0) {
       // withSpring provides a smooth, non-distracting snap effect
       translateX.value = withSpring(activeIndex * segmentWidth, {
         damping: 45,
         stiffness: 450,
       });
     }
-  }, [activeIndex, containerWidth, options.length]);
+  }, [activeIndex, segmentWidth, translateX]);
 
-  const pillAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: translateX.value }],
-      width: containerWidth > 0 ? (containerWidth - 4) / options.length : 0,
-    };
-  });
+  const pillAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
 
   const handleLayout = (event: LayoutChangeEvent) => {
     setContainerWidth(event.nativeEvent.layout.width);
@@ -55,14 +55,18 @@ export const SegmentedToggle: React.FC<SegmentedToggleProps> = ({
 
   return (
     <View
-      style={[styles.container, { backgroundColor: colors.surface}]}
+      style={[styles.container, { backgroundColor: colors.surface }]}
       onLayout={handleLayout}
     >
       {/* Animated Background Pill */}
-      {containerWidth > 0 && (
-        <Animated.View style={[styles.activePill, pillAnimatedStyle,{
-            backgroundColor:colors.surface2
-        }]} />
+      {segmentWidth > 0 && (
+        <Animated.View
+          style={[
+            styles.activePill,
+            { width: segmentWidth, backgroundColor: colors.surface2 },
+            pillAnimatedStyle,
+          ]}
+        />
       )}
 
       {/* Touchable Options */}
@@ -72,10 +76,17 @@ export const SegmentedToggle: React.FC<SegmentedToggleProps> = ({
         return (
           <Pressable
             key={option}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: isActive }}
             style={styles.optionButton}
             onPress={() => onChange(option)}
           >
-            <Text style={[styles.optionText, isActive && styles.activeText]}>
+            <Text
+              style={[
+                styles.optionText,
+                { color: colors.text, opacity: isActive ? 1 : 0.5 },
+              ]}
+            >
               {option}
             </Text>
           </Pressable>
@@ -83,22 +94,22 @@ export const SegmentedToggle: React.FC<SegmentedToggleProps> = ({
       })}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     borderRadius: 18,
-    padding: 4,
+    padding: PADDING,
     position: "relative",
     height: 48,
     marginVertical: 16,
   },
   activePill: {
     position: "absolute",
-    top: 4,
-    bottom: 4,
-    left: 4, // Aligns with the container's padding
+    top: PADDING,
+    bottom: PADDING,
+    left: PADDING, // Aligns with the container's padding
     borderRadius: 15,
   },
   optionButton: {
@@ -108,11 +119,9 @@ const styles = StyleSheet.create({
     zIndex: 1, // Ensures the text sits above the animated pill
   },
   optionText: {
-    color: "#8A8A93",
     fontSize: 15,
     fontWeight: "600",
   },
-  activeText: {
-    color: "#FFFFFF", // Pops out when the pill slides under it
-  },
 });
+
+export default SegmentedToggle;

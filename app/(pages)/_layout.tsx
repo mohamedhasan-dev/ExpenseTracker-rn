@@ -255,6 +255,8 @@ export default function PagesLayout() {
   const insets = useSafeAreaInsets();
   return (
     <Tabs
+      // Back from a tab returns to the tab you came from (e.g. Add Transaction -> Dashboard)
+      backBehavior="history"
       screenOptions={{
         headerShown: false,
         freezeOnBlur: true, // hidden tabs don't re-render

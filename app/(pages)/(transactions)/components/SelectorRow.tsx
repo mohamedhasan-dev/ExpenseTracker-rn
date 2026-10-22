@@ -10,7 +10,7 @@ interface SelectorRowProps {
   onPress: () => void;
 }
 
-export const SelectorRow: React.FC<SelectorRowProps> = ({
+const SelectorRow: React.FC<SelectorRowProps> = ({
   label,
   value,
   icon = "chevron-right", // Default icon if none is provided
@@ -70,3 +70,5 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 });
+
+export default SelectorRow;

@@ -8,7 +8,7 @@ interface PrimaryButtonProps {
   disabled?: boolean;
 }
 
-export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
+const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   label,
   onPress,
   disabled = false,
@@ -58,3 +58,5 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
 });
+
+export default PrimaryButton;

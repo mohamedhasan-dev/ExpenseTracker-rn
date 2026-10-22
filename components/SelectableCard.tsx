@@ -16,7 +16,7 @@ interface SelectableCardProps {
   labelSize?: number; // Optional label size
 }
 
-export const SelectableCard: React.FC<SelectableCardProps> = ({
+const SelectableCard: React.FC<SelectableCardProps> = ({
   label,
   icon,
   isActive,
@@ -77,3 +77,5 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 });
+
+export default SelectableCard;

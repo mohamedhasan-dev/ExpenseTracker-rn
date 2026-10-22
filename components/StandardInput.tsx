@@ -12,11 +12,11 @@ interface StandardInputProps extends TextInputProps {
   label: string;
 }
 
-export const StandardInput: React.FC<StandardInputProps> = ({
+const StandardInput: React.FC<StandardInputProps> = ({
   label,
   ...props
 }) => {
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
 
   return (
@@ -35,8 +35,12 @@ export const StandardInput: React.FC<StandardInputProps> = ({
         ]}
       >
         <TextInput
-          style={[styles.input, { color: colors.text }]}
-          placeholderTextColor="hsla(186, 70%, 91%, 0.60)"
+          {...props}
+          // Spread first so the focus handlers below aren't overridden by props
+          style={[styles.input, { color: colors.text }, props.style]}
+          placeholderTextColor={
+            isDarkMode ? "hsla(186, 70%, 91%, 0.6)" : "hsla(210, 26%, 15%, 0.45)"
+          }
           onFocus={(e) => {
             setIsFocused(true);
             props.onFocus?.(e);
@@ -45,7 +49,6 @@ export const StandardInput: React.FC<StandardInputProps> = ({
             setIsFocused(false);
             props.onBlur?.(e);
           }}
-          {...props}
         />
       </View>
     </View>
@@ -76,3 +79,5 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 });
+
+export default StandardInput;

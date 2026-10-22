@@ -7,6 +7,7 @@ import {
 } from "react";
 import * as SecureStore from "expo-secure-store";
 import loginFn, { signup as signupFn } from "../app/(auth)/services/login";
+import { clearQueryCache } from "@/services/queryClient";
 
 interface AuthContextType {
   authenticate: {
@@ -51,6 +52,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     await SecureStore.deleteItemAsync("token");
+    // Cached data belongs to this user; don't show it to the next one
+    await clearQueryCache();
     setAuthenticate({
       isAuthenticated: false,
       Token: null,
@@ -59,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const saveToken = async (token: string) => {
     await SecureStore.setItemAsync("token", token);
+    await clearQueryCache(); // fresh cache for the account that just signed in
     setAuthenticate({
       isAuthenticated: true,
       Token: token,

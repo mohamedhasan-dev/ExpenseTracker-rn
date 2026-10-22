@@ -6,29 +6,29 @@ import Badge from "@/components/Badge";
 import amount, { splitAmount } from "../../services/amount";
 import ProgressBar from "@/components/ProgressBar";
 
-// Dummy numbers until this is wired to /transactions
-const EXPENSE = 1240.5;
-const INCOME = 2100;
-const EXPENSE_CHANGE = 8.4; // % vs last month
-const INCOME_CHANGE = 8.4;
-
 type StatCardProps = {
   label: string;
   value: number;
-  change: number;
-  trend: "positive" | "negative";
+  /** % vs last month; null hides the badge (nothing to compare with) */
+  change: number | null;
+  /** true for income (going up is good), false for expenses */
+  upIsGood: boolean;
   textColor: string;
 };
 
-const StatCard = ({ label, value, change, trend, textColor }: StatCardProps) => {
+const StatCard = ({ label, value, change, upIsGood, textColor }: StatCardProps) => {
   const { whole, fraction } = splitAmount(value);
+  const trend =
+    change === null || change === 0 || change > 0 === upIsGood
+      ? "positive"
+      : "negative";
   return (
     <BlurCard style={styles.card}>
       <View style={styles.card_header}>
         <Text style={{ fontSize: 12, opacity: 0.6, color: textColor }}>
           {label}
         </Text>
-        <Badge value={change} trend={trend} />
+        {change !== null && <Badge value={change} trend={trend} />}
       </View>
       <View style={styles.amount_row}>
         <Text
@@ -44,10 +44,29 @@ const StatCard = ({ label, value, change, trend, textColor }: StatCardProps) => 
   );
 };
 
-const IncomeExpense = () => {
+interface IncomeExpenseProps {
+  income: number;
+  expense: number;
+  incomeChange: number | null;
+  expenseChange: number | null;
+}
+
+const IncomeExpense = ({
+  income,
+  expense,
+  incomeChange,
+  expenseChange,
+}: IncomeExpenseProps) => {
   const { colors } = useTheme();
-  const spentPct = INCOME > 0 ? Math.round((EXPENSE / INCOME) * 100) : 0;
-  const left = Math.max(0, INCOME - EXPENSE);
+  const spentPct = income > 0 ? Math.round((expense / income) * 100) : 0;
+  const left = income - expense;
+
+  const summary =
+    income > 0
+      ? `${spentPct}% of income spent`
+      : expense > 0
+        ? "No income this month"
+        : "Nothing spent yet";
 
   return (
     <View style={[styles.container, { backgroundColor: colors.surface }]}>
@@ -62,16 +81,16 @@ const IncomeExpense = () => {
       <View style={styles.cards_container}>
         <StatCard
           label="Expenses"
-          value={EXPENSE}
-          change={EXPENSE_CHANGE}
-          trend="negative"
+          value={expense}
+          change={expenseChange}
+          upIsGood={false}
           textColor={colors.text}
         />
         <StatCard
           label="Income"
-          value={INCOME}
-          change={INCOME_CHANGE}
-          trend="positive"
+          value={income}
+          change={incomeChange}
+          upIsGood
           textColor={colors.text}
         />
       </View>
@@ -80,16 +99,21 @@ const IncomeExpense = () => {
           size={1}
           width={"100%"}
           height={8}
-          progress={spentPct}
+          progress={income > 0 ? spentPct : expense > 0 ? 100 : 0}
           trackColor={colors.background}
           fillColor={colors.accent}
         />
         <View style={styles.footer}>
           <Text style={[styles.footer_text, { color: colors.text }]}>
-            {spentPct}% of income spent
+            {summary}
           </Text>
-          <Text style={[styles.footer_text, { color: colors.text }]}>
-            {amount(left)} left
+          <Text
+            style={[
+              styles.footer_text,
+              { color: left < 0 ? colors.accent : colors.text },
+            ]}
+          >
+            {left < 0 ? `${amount(-left)} over` : `${amount(left)} left`}
           </Text>
         </View>
       </View>

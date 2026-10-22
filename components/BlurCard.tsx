@@ -1,6 +1,7 @@
 import { StyleSheet, View, ViewStyle } from "react-native";
 import { BlurView } from "expo-blur";
 import React from "react";
+import useTheme from "@/hooks/useTheme";
 
 interface BlurCardProps {
   children: React.ReactNode;
@@ -8,14 +9,28 @@ interface BlurCardProps {
 }
 
 const BlurCard = (props: BlurCardProps) => {
+  const { isDarkMode } = useTheme();
   return (
-    <View style={[props.style,{
-        borderWidth:1,
-        borderColor:'hsla(0, 0%, 100%, 0.10)',
-        overflow:'hidden',
-        backgroundColor:'hsla(0, 0%, 100%, 0.05)'
-    }]}>
-      <BlurView intensity={20} tint="dark" style={[StyleSheet.absoluteFill]} />
+    <View
+      style={[
+        props.style,
+        {
+          borderWidth: 1,
+          overflow: "hidden",
+          borderColor: isDarkMode
+            ? "hsla(0, 0%, 100%, 0.10)"
+            : "hsla(0, 0%, 0%, 0.08)",
+          backgroundColor: isDarkMode
+            ? "hsla(0, 0%, 100%, 0.05)"
+            : "hsla(0, 0%, 0%, 0.03)",
+        },
+      ]}
+    >
+      <BlurView
+        intensity={20}
+        tint={isDarkMode ? "dark" : "light"}
+        style={[StyleSheet.absoluteFill]}
+      />
       <View style={{ alignItems: "center" }}>{props.children}</View>
     </View>
   );

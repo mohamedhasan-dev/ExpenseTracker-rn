@@ -9,7 +9,7 @@ import useAuth from "@/hooks/useAuth";
 import useTheme from "@/hooks/useTheme";
 
 // Login is bypassed while building the UI. Set to true to require login again.
-const REQUIRE_LOGIN = false;
+const REQUIRE_LOGIN = true;
 
 export const useIsLoggedIn = () => {
   const { authenticate } = useAuth();

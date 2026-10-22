@@ -25,7 +25,7 @@ export const light_colors: ColorsType = {
   secondary: "hsl(192, 73%, 30%)",
   primary: "hsl(198, 60%, 55%)",
   accent: "hsl(358, 47%, 50%)",
-  surface2: "hsla(207, 29%, 30%, 0.74)",
+  surface2: "hsla(192, 35%, 82%, 0.7)",
 };
 
 //dark

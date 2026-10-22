@@ -1,47 +1,14 @@
-import useFetch from "@/services/useFetch";
-import useAuth from "@/hooks/useAuth";
-import { useEffect, useState } from "react";
 import useTheme from "@/hooks/useTheme";
-import { StyleSheet, Text, View, ScrollView } from "react-native";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { useState } from "react";
+import { StyleSheet, Text, View, ScrollView, RefreshControl } from "react-native";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useQueryClient } from "@tanstack/react-query";
 import IncomeExpense from "./components/IncomeExpense";
 import Spendings from "./components/Spendings";
-import Recent_Transactions, {
-  transaction,
-} from "./components/Recent_Transactions";
-import { API_URL } from "@/services/api";
-
-// Dummy data until this is wired to GET /transactions
-const transactions: transaction[] = [
-  {
-    amount: 42.5,
-    description: "Whole Foods Market",
-    type: "expense",
-    category: "food",
-    date: "Today, 2:40 PM",
-  },
-  {
-    amount: 18.2,
-    description: "Uber Trip",
-    type: "expense",
-    category: "transport",
-    date: "Yesterday",
-  },
-  {
-    amount: 129,
-    description: "Apple Store",
-    type: "expense",
-    category: "shopping",
-    date: "14 Oct",
-  },
-  {
-    amount: 85,
-    description: "Metropolitan Power",
-    type: "expense",
-    category: "bills",
-    date: "12 Oct",
-  },
-];
+import Recent_Transactions from "./components/Recent_Transactions";
+import { useCurrentUser, useTransactions } from "@/services/queries";
+import { monthRange, startOfMonth } from "@/services/date";
+import { percentChange, summarize } from "@/services/transactions";
 
 const getGreeting = () => {
   const hour = new Date().getHours();
@@ -51,35 +18,52 @@ const getGreeting = () => {
 };
 
 const Dashboard = () => {
-  const fetchAPI = useFetch();
-  const { authenticate } = useAuth();
   const { colors } = useTheme();
-  const [user, setUser] = useState("");
-  const month = new Date()
-    .toLocaleString("en-US", { month: "long" }) //Make it Reactive
-    .toUpperCase();
+  // Cached + refreshed in the background (see services/queries.ts)
+  const { data: currentUser } = useCurrentUser();
+  const user = currentUser?.user_name ?? "";
 
-  useEffect(() => {
-    // Skip while logged out (login is bypassed during UI work)
-    if (!authenticate.Token) return;
-    const fetchUser = async () => {
-      try {
-        const response = await fetchAPI(`${API_URL}/users`, "GET");
-        if (!response.ok) return;
-        const data: { user_name?: string } = await response.json();
-        if (typeof data?.user_name === "string") setUser(data.user_name);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    fetchUser();
-  }, [fetchAPI, authenticate.Token]);
+  const now = new Date();
+  const month = now.toLocaleString("en-IN", { month: "long" }).toUpperCase();
+
+  // This month (totals + categories), last month (for the % badges), and the latest 5
+  const { data: thisMonth = [] } = useTransactions(monthRange(now));
+  const { data: lastMonth = [] } = useTransactions(
+    monthRange(startOfMonth(now, -1)),
+  );
+  const { data: recent = [], isPending: recentLoading } = useTransactions({
+    limit: 5,
+  });
+
+  const current = summarize(thisMonth);
+  const previous = summarize(lastMonth);
+
+  // Pull to refresh: refetch everything on screen
+  const queryClient = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await queryClient.invalidateQueries();
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   return (
     <ScrollView
       style={styles.root}
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={colors.accent}
+          colors={[colors.accent]}
+          progressBackgroundColor={colors.surface}
+        />
+      }
     >
       <Text style={[styles.month, { color: colors.text }]}>{month}</Text>
       <View style={styles.header}>
@@ -101,14 +85,22 @@ const Dashboard = () => {
               {user.charAt(0).toUpperCase()}
             </Text>
           ) : (
-            <FontAwesome name="user" size={18} color={colors.accent} />
+            <MaterialCommunityIcons name="account" size={20} color={colors.accent} />
           )}
         </View>
       </View>
       <View style={styles.content}>
-        <IncomeExpense />
-        <Spendings />
-        <Recent_Transactions transactions={transactions} />
+        <IncomeExpense
+          income={current.income}
+          expense={current.expense}
+          incomeChange={percentChange(current.income, previous.income)}
+          expenseChange={percentChange(current.expense, previous.expense)}
+        />
+        <Spendings
+          categories={current.expenseByCategory}
+          total={current.expense}
+        />
+        <Recent_Transactions transactions={recent} isLoading={recentLoading} />
       </View>
     </ScrollView>
   );
