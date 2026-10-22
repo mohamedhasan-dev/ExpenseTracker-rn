@@ -4,12 +4,14 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import useTheme from "@/hooks/useTheme";
 import useAuth from "@/hooks/useAuth";
 import PrimaryButton from "@/components/PrimaryButton";
-import { useCurrentUser } from "@/services/queries";
+import { errorMessage, useCurrentUser } from "@/services/queries";
+import ErrorBanner from "@/components/ErrorBanner";
 
 const Settings = () => {
   const { colors, isDarkMode, toggleDarkMode } = useTheme();
   const { logout } = useAuth();
-  const { data: user } = useCurrentUser();
+  const userQuery = useCurrentUser();
+  const user = userQuery.data;
 
   const confirmLogout = () =>
     Alert.alert("Log out?", "You'll need to sign in again to see your data.", [
@@ -34,13 +36,21 @@ const Settings = () => {
         </View>
         <View style={{ flex: 1 }}>
           <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
-            {user?.user_name ?? " "}
+            {user?.user_name ?? (userQuery.isPending ? "Loading..." : "Unknown user")}
           </Text>
           <Text style={[styles.email, { color: colors.text }]} numberOfLines={1}>
             {user?.email ?? " "}
           </Text>
         </View>
       </View>
+
+      {userQuery.isError && !user && (
+        <ErrorBanner
+          message={errorMessage(userQuery.error, "Couldn't load your profile.")}
+          onRetry={() => userQuery.refetch()}
+          retrying={userQuery.isRefetching}
+        />
+      )}
 
       {/* Preferences */}
       <View style={[styles.card, { backgroundColor: colors.surface }]}>

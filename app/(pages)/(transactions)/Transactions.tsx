@@ -14,6 +14,7 @@ import BackButton from "@/components/BackButton";
 import SegmentedToggle from "./components/SegmentedToggle";
 import TransactionRow from "./components/TransactionRow";
 import { errorMessage, useTransactions } from "@/services/queries";
+import ErrorBanner from "@/components/ErrorBanner";
 import amount from "../services/amount";
 import {
   formatMonth,
@@ -31,8 +32,11 @@ const Transactions = () => {
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [filter, setFilter] = useState<Filter>("All");
 
-  const { data = [], isPending, isError, error, refetch, isRefetching } =
-    useTransactions(monthRange(month));
+  const query = useTransactions(monthRange(month));
+  const { isPending, isError, error, refetch, isRefetching } = query;
+  const data = query.data ?? [];
+  // Refresh failed but an older copy is on screen: say so instead of failing silently
+  const staleError = isError && query.data !== undefined;
 
   const totals = summarize(data);
   const visible =
@@ -108,6 +112,16 @@ const Transactions = () => {
       </View>
 
       <SegmentedToggle options={FILTERS} activeOption={filter} onChange={setFilter} />
+
+      {staleError && (
+        <View style={{ marginBottom: 8 }}>
+          <ErrorBanner
+            message={`${errorMessage(error, "Couldn't refresh.")} Showing saved data.`}
+            onRetry={() => refetch()}
+            retrying={isRefetching}
+          />
+        </View>
+      )}
 
       <SectionList
         sections={sections}

@@ -25,16 +25,29 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
 
   useEffect(() => {
-    AsyncStorage.getItem("isDarkMode").then((value) => {
-      if (value) setDarkMode(JSON.parse(value))
-      else setDarkMode(deviceTheme==='dark')
-    });
+    (async () => {
+      try {
+        const value = await AsyncStorage.getItem("isDarkMode");
+        if (value !== null) {
+          setDarkMode(JSON.parse(value) === true);
+          return;
+        }
+      } catch (error) {
+        // Unreadable or corrupt preference: fall back to the device setting
+        if (__DEV__) console.warn("Couldn't read the theme preference", error);
+      }
+      setDarkMode(deviceTheme === "dark");
+    })();
   }, [deviceTheme]);
 
-  const toggleDarkMode = async() => {
-    let newMode = !isDarkMode
-    setDarkMode(newMode)
-    await AsyncStorage.setItem("isDarkMode",JSON.stringify(newMode))
+  const toggleDarkMode = async () => {
+    const newMode = !isDarkMode;
+    setDarkMode(newMode); // switch immediately; saving is best-effort
+    try {
+      await AsyncStorage.setItem("isDarkMode", JSON.stringify(newMode));
+    } catch (error) {
+      if (__DEV__) console.warn("Couldn't save the theme preference", error);
+    }
   };
 
   const colors = isDarkMode ? dark_colors : light_colors

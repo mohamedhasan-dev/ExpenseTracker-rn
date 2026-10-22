@@ -9,7 +9,7 @@ import {
 import SelectableCard from "@/components/SelectableCard";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import useTheme from "@/hooks/useTheme";
-import { useCategories } from "@/services/queries";
+import { errorMessage, useCategories } from "@/services/queries";
 
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
@@ -37,7 +37,9 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
     data: activeCategories,
     isPending,
     isError,
+    error,
     refetch,
+    isRefetching,
   } = useCategories(transactionType);
 
   return (
@@ -64,10 +66,18 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
           <ActivityIndicator color={colors.accent} />
         </View>
       ) : isError ? (
-        <Pressable style={styles.status} onPress={() => refetch()}>
-          <Text style={{ color: colors.text, opacity: 0.6 }}>
-            Couldn&apos;t load categories. Tap to retry.
-          </Text>
+        <Pressable
+          style={styles.status}
+          onPress={() => refetch()}
+          disabled={isRefetching}
+        >
+          {isRefetching ? (
+            <ActivityIndicator color={colors.accent} />
+          ) : (
+            <Text style={{ color: colors.text, opacity: 0.6, textAlign: "center" }}>
+              {errorMessage(error, "Couldn't load categories.")} Tap to retry.
+            </Text>
+          )}
         </Pressable>
       ) : (
         <View style={styles.status}>

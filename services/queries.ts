@@ -2,6 +2,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import useAuth from "@/hooks/useAuth";
 import useFetch from "@/services/useFetch";
 import { API_URL } from "@/services/api";
+import { isApiError, readJson } from "@/services/http";
+
+// Re-exported so screens can import everything data-related from one place
+export { ApiError, errorMessage } from "@/services/http";
 
 const HOUR = 60 * 60 * 1000;
 
@@ -47,25 +51,6 @@ export type TransactionFilters = {
   to?: string; // ISO, exclusive
   limit?: number; // 1-100
 };
-
-export class ApiError extends Error {
-  status: number;
-  constructor(status: number, message: string) {
-    super(message);
-    this.status = status;
-  }
-}
-
-async function readJson<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    const body = await response.json().catch(() => null);
-    throw new ApiError(
-      response.status,
-      body?.message ?? `Request failed (${response.status})`,
-    );
-  }
-  return (await response.json()) as T;
-}
 
 /* ---------- cache keys (use these for invalidation) ---------- */
 
@@ -117,16 +102,6 @@ export function useCategories(type?: TransactionType) {
   });
 }
 
-/** Readable message for any error thrown by the hooks below */
-export const errorMessage = (error: unknown, fallback = "Something went wrong") => {
-  if (error instanceof ApiError) return error.message;
-  if (error instanceof Error && error.message === "Session expired") {
-    return "Your session expired. Please log in again.";
-  }
-  if (error instanceof TypeError) return "Can't reach the server. Check your connection.";
-  return fallback;
-};
-
 /** Saves a transaction, then refreshes every cached transaction list */
 export function useCreateTransaction() {
   const fetchAPI = useFetch();
@@ -138,6 +113,12 @@ export function useCreateTransaction() {
       ),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.transactionsAll }),
+    onError: (error) => {
+      // 403 = the chosen category no longer exists for this user: refresh the cached list
+      if (isApiError(error) && error.status === 403) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.categories });
+      }
+    },
   });
 }
 

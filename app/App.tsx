@@ -52,7 +52,19 @@ const App = () => {
 
   return (
     <NavigationThemeProvider value={navigationTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
+      {/* Themed backdrop: anything translucent during a transition blends with the
+          app background instead of Android's white window */}
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          // Switching between login and the app (and the "/" redirect) is a swap,
+          // not a navigation. Animating it let a second, near-simultaneous replace
+          // (Redirect runs in an effect) interrupt the Android fade and leave the
+          // (auth) screen stuck at ~60% opacity - the "whitewashed" login screen.
+          animation: "none",
+        }}
+      >
         <Stack.Screen name="index" />
         {/* (pages) is the main app: tabs + navbar */}
         <Stack.Protected guard={isLoggedIn}>
@@ -62,6 +74,7 @@ const App = () => {
           <Stack.Screen name="(auth)" />
         </Stack.Protected>
       </Stack>
+      </View>
     </NavigationThemeProvider>
   );
 };

@@ -6,7 +6,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import IncomeExpense from "./components/IncomeExpense";
 import Spendings from "./components/Spendings";
 import Recent_Transactions from "./components/Recent_Transactions";
-import { useCurrentUser, useTransactions } from "@/services/queries";
+import {
+  errorMessage,
+  useCurrentUser,
+  useTransactions,
+} from "@/services/queries";
+import ErrorBanner from "@/components/ErrorBanner";
 import { monthRange, startOfMonth } from "@/services/date";
 import { percentChange, summarize } from "@/services/transactions";
 
@@ -20,23 +25,26 @@ const getGreeting = () => {
 const Dashboard = () => {
   const { colors } = useTheme();
   // Cached + refreshed in the background (see services/queries.ts)
-  const { data: currentUser } = useCurrentUser();
-  const user = currentUser?.user_name ?? "";
+  const userQuery = useCurrentUser();
+  const user = userQuery.data?.user_name ?? "";
 
   const now = new Date();
   const month = now.toLocaleString("en-IN", { month: "long" }).toUpperCase();
 
   // This month (totals + categories), last month (for the % badges), and the latest 5
-  const { data: thisMonth = [] } = useTransactions(monthRange(now));
-  const { data: lastMonth = [] } = useTransactions(
-    monthRange(startOfMonth(now, -1)),
-  );
-  const { data: recent = [], isPending: recentLoading } = useTransactions({
-    limit: 5,
-  });
+  const thisMonthQuery = useTransactions(monthRange(now));
+  const lastMonthQuery = useTransactions(monthRange(startOfMonth(now, -1)));
+  const recentQuery = useTransactions({ limit: 5 });
 
-  const current = summarize(thisMonth);
-  const previous = summarize(lastMonth);
+  const current = summarize(thisMonthQuery.data ?? []);
+  const previous = summarize(lastMonthQuery.data ?? []);
+
+  // One banner for any failed request; cached numbers stay visible underneath
+  const failedQuery = [thisMonthQuery, recentQuery, lastMonthQuery, userQuery].find(
+    (q) => q.isError,
+  );
+  const showingSavedData =
+    thisMonthQuery.data !== undefined || recentQuery.data !== undefined;
 
   // Pull to refresh: refetch everything on screen
   const queryClient = useQueryClient();
@@ -90,6 +98,15 @@ const Dashboard = () => {
         </View>
       </View>
       <View style={styles.content}>
+        {failedQuery && (
+          <ErrorBanner
+            message={`${errorMessage(failedQuery.error, "Couldn't load your latest data.")}${
+              showingSavedData ? " Showing your last saved data." : ""
+            }`}
+            onRetry={onRefresh}
+            retrying={refreshing}
+          />
+        )}
         <IncomeExpense
           income={current.income}
           expense={current.expense}
@@ -100,7 +117,11 @@ const Dashboard = () => {
           categories={current.expenseByCategory}
           total={current.expense}
         />
-        <Recent_Transactions transactions={recent} isLoading={recentLoading} />
+        <Recent_Transactions
+          transactions={recentQuery.data ?? []}
+          isLoading={recentQuery.isPending && !recentQuery.isError}
+          hasError={recentQuery.isError && recentQuery.data === undefined}
+        />
       </View>
     </ScrollView>
   );

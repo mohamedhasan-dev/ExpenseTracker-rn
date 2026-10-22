@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { QueryClient } from "@tanstack/react-query";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
+import { shouldRetry } from "@/services/http";
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -15,7 +16,11 @@ export const queryClient = new QueryClient({
     queries: {
       // Must be >= CACHE_MAX_AGE, otherwise restored data is garbage-collected
       gcTime: CACHE_MAX_AGE,
-      retry: 2,
+      // Retry network/server hiccups, not "bad request" or "logged out"
+      retry: shouldRetry,
+    },
+    mutations: {
+      retry: false, // never resend a save automatically (could create duplicates)
     },
   },
 });
@@ -30,5 +35,9 @@ export const queryPersister = createAsyncStoragePersister({
 /** Wipes the cache in memory and on disk (logout / switching accounts) */
 export async function clearQueryCache() {
   queryClient.clear();
-  await queryPersister.removeClient();
+  try {
+    await queryPersister.removeClient();
+  } catch (error) {
+    if (__DEV__) console.warn("Couldn't clear the saved query cache", error);
+  }
 }

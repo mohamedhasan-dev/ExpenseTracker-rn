@@ -8,9 +8,15 @@ import type { Transaction } from "@/services/queries";
 interface RecentTransactionsProps {
   transactions: Transaction[];
   isLoading?: boolean;
+  /** Request failed and nothing is cached (the screen shows the error banner) */
+  hasError?: boolean;
 }
 
-const Recent_Transactions = ({ transactions, isLoading }: RecentTransactionsProps) => {
+const Recent_Transactions = ({
+  transactions,
+  isLoading,
+  hasError,
+}: RecentTransactionsProps) => {
   const { colors } = useTheme();
 
   return (
@@ -28,6 +34,10 @@ const Recent_Transactions = ({ transactions, isLoading }: RecentTransactionsProp
         {transactions.length === 0 &&
           (isLoading ? (
             <ActivityIndicator style={styles.empty} color={colors.accent} />
+          ) : hasError ? (
+            <Text style={[styles.empty, { color: colors.text }]}>
+              Couldn&apos;t load your transactions.
+            </Text>
           ) : (
             <Text style={[styles.empty, { color: colors.text }]}>
               No transactions yet. Tap + to add one.

@@ -18,21 +18,39 @@ const Login = () => {
   const [pword, setPword] = useState("");
   const [isLoading, setLoading] = useState(false);
   const [isWorngCred, setWrongCred] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const { login } = useAuth();
 
+  // Typing again clears the previous error
+  const editName = (value: string) => {
+    setName(value);
+    setWrongCred(false);
+    setError(null);
+  };
+  const editPassword = (value: string) => {
+    setPword(value);
+    setWrongCred(false);
+    setError(null);
+  };
+
   const handleLogin = async () => {
     if (isLoading) return;
+    if (!name.trim() || !pword) {
+      setError("Enter your username/email and password.");
+      return;
+    }
+    setError(null);
     setLoading(true);
     try {
-      const token = await login(name, pword);
-      if (token) {
-        setWrongCred(false);
-        return token;
+      // login() never throws: it resolves with { ok } or a message to show
+      const result = await login(name.trim(), pword);
+      if (!result.ok) {
+        setError(result.error);
+        // Only highlight the fields when the credentials were wrong, not for network errors
+        setWrongCred(!!result.invalidCredentials);
       }
-      setWrongCred(true);
-    } catch (e) {
-      return false;
+      // On success the app switches to the dashboard automatically
     } finally {
       setLoading(false);
     }
@@ -64,6 +82,13 @@ const Login = () => {
       borderRadius: 15,
       boxShadow: "0px 1px 10px hsl(358, 47%, 10%)",
     },
+    error: {
+      color: "hsl(0, 85%, 72%)",
+      fontSize: 14,
+      textAlign: "center",
+      maxWidth: 320,
+      marginTop: 4,
+    },
   });
 
   return (
@@ -76,7 +101,6 @@ const Login = () => {
         style={styles.blurBox}
         intensity={12}
         tint="dark"
-        experimentalBlurMethod="dimezisBlurView"
       >
         <View>
           <Text
@@ -93,16 +117,21 @@ const Login = () => {
         <Textinput
           Label="USERNAME/EMAIL"
           value={name}
-          setValue={setName}
+          setValue={editName}
           isWrongCred={isWorngCred}
         />
         <Textinput
           Label="PASSWORD"
           password
           value={pword}
-          setValue={setPword}
+          setValue={editPassword}
           isWrongCred={isWorngCred}
         />
+        {error && (
+          <Text accessibilityLiveRegion="polite" style={styles.error}>
+            {error}
+          </Text>
+        )}
         <Pressable
           style={({ pressed }) => [
             {

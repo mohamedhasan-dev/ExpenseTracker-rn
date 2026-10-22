@@ -9,15 +9,19 @@ import * as SecureStore from "expo-secure-store";
 import loginFn, { signup as signupFn } from "../app/(auth)/services/login";
 import { clearQueryCache } from "@/services/queryClient";
 
+/** login/signup never throw; on failure they resolve with a message to show */
+export type AuthOutcome =
+  | { ok: true }
+  | { ok: false; error: string; invalidCredentials?: boolean };
+
 interface AuthContextType {
   authenticate: {
     isAuthenticated: boolean;
     Token: string | null;
   };
   isLoading: boolean;
-  login: (nameoremail: string, password: string) => Promise<string | false>;
-  /** Resolves to an error message, or null when the account was created and the user is logged in. */
-  signup: (name: string, email: string, password: string) => Promise<string | null>;
+  login: (nameoremail: string, password: string) => Promise<AuthOutcome>;
+  signup: (name: string, email: string, password: string) => Promise<AuthOutcome>;
   logout: () => Promise<void>;
 }
 
@@ -43,7 +47,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
         }
       } catch (error) {
-        console.error("Error fetching token:", error);
+        // Unreadable secure storage: start logged out instead of crashing
+        if (__DEV__) console.warn("Couldn't read the saved login", error);
       } finally {
         setIsLoading(false);
       }
@@ -51,9 +56,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = async () => {
-    await SecureStore.deleteItemAsync("token");
+    try {
+      await SecureStore.deleteItemAsync("token");
+    } catch (error) {
+      if (__DEV__) console.warn("Couldn't remove the saved login", error);
+    }
     // Cached data belongs to this user; don't show it to the next one
     await clearQueryCache();
+    // Always end up logged out, even if storage failed
     setAuthenticate({
       isAuthenticated: false,
       Token: null,
@@ -61,7 +71,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const saveToken = async (token: string) => {
-    await SecureStore.setItemAsync("token", token);
+    try {
+      await SecureStore.setItemAsync("token", token);
+    } catch (error) {
+      // Still log in for this session; they'll just need to log in again next launch
+      if (__DEV__) console.warn("Couldn't save the login token", error);
+    }
     await clearQueryCache(); // fresh cache for the account that just signed in
     setAuthenticate({
       isAuthenticated: true,
@@ -69,21 +84,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const login = async (nameoremail: string, password: string) => {
-    const token = await loginFn(nameoremail, password);
-    if (token) {
-      await saveToken(token);
-    }
-    return token;
+  const login = async (
+    nameoremail: string,
+    password: string,
+  ): Promise<AuthOutcome> => {
+    const result = await loginFn(nameoremail, password);
+    if (!result.ok) return result;
+    await saveToken(result.token);
+    return { ok: true };
   };
 
-  const signup = async (name: string, email: string, password: string) => {
+  const signup = async (
+    name: string,
+    email: string,
+    password: string,
+  ): Promise<AuthOutcome> => {
     const result = await signupFn(name, email, password);
-    if ("token" in result) {
-      await saveToken(result.token);
-      return null;
-    }
-    return result.error;
+    if (!result.ok) return result;
+    await saveToken(result.token);
+    return { ok: true };
   };
 
   return (
