@@ -16,13 +16,16 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 interface TransactionRowProps {
   transaction: Transaction;
-  /** "relative" = "Today, 2:40 pm" / "14 Oct"; "time" = "2:40 pm" (for lists grouped by day) */
-  dateFormat?: "relative" | "time";
+  /**
+   * "compact" (Dashboard card): "Food · Today, 2:40 pm", expenses in text colour.
+   * "history" (Transactions list, grouped by day): "UPI · Food", expenses in accent.
+   */
+  variant?: "compact" | "history";
 }
 
 const TransactionRow = ({
   transaction: t,
-  dateFormat = "relative",
+  variant = "compact",
 }: TransactionRowProps) => {
   const { colors } = useTheme();
   const income = isIncome(t);
@@ -31,14 +34,44 @@ const TransactionRow = ({
     : income
       ? "arrow-up"
       : "arrow-down";
-  const when =
-    dateFormat === "time"
-      ? formatTime(new Date(t.date))
-      : formatRelativeDate(t.date);
+  const categoryName = t.category?.name ?? capitalize(t.type);
+  const title = t.description || categoryName;
+
+  // Secondary line: history rows show how it was paid (the day is in the section header)
+  const meta =
+    variant === "history"
+      ? [
+          t.paymentMethod,
+          // Avoid repeating the category when it's already the title
+          title === categoryName ? formatTime(new Date(t.date)) : categoryName,
+        ]
+          .filter(Boolean)
+          .join(" · ")
+      : `${categoryName} · ${formatRelativeDate(t.date)}`;
+
+  const amountColor = income
+    ? colors.primary
+    : variant === "history"
+      ? colors.accent
+      : colors.text;
 
   return (
-    <View style={styles.row}>
-      <View style={[styles.icon, { backgroundColor: colors.background }]}>
+    <View
+      style={styles.row}
+      accessible
+      accessibilityLabel={`${title}, ${meta}, ${income ? "income" : "expense"} ${amount(
+        Math.abs(Number(t.amount)),
+      )}`}
+    >
+      <View
+        style={[
+          styles.icon,
+          {
+            backgroundColor:
+              variant === "history" ? colors.surface : colors.background,
+          },
+        ]}
+      >
         <MaterialCommunityIcons
           name={icon}
           size={20}
@@ -48,20 +81,15 @@ const TransactionRow = ({
 
       <View style={{ flex: 1 }}>
         <Text numberOfLines={1} style={[styles.title, { color: colors.text }]}>
-          {t.description || t.category?.name || capitalize(t.type)}
+          {title}
         </Text>
         <Text numberOfLines={1} style={[styles.meta, { color: colors.text }]}>
-          {t.category?.name ?? capitalize(t.type)} · {when}
+          {meta}
         </Text>
       </View>
 
-      <Text
-        style={[
-          styles.amount,
-          { color: income ? colors.primary : colors.text },
-        ]}
-      >
-        {income ? "+" : "-"}
+      <Text numberOfLines={1} style={[styles.amount, { color: amountColor }]}>
+        {income ? "+" : "\u2212"}
         {amount(Math.abs(Number(t.amount)))}
       </Text>
     </View>
@@ -94,6 +122,8 @@ const styles = StyleSheet.create({
   amount: {
     fontSize: 15,
     fontWeight: "700",
+    flexShrink: 0,
+    maxWidth: "45%",
   },
 });
 

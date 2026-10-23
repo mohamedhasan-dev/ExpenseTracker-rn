@@ -45,6 +45,21 @@ export type NewTransaction = {
   paymentMethod: PaymentMethod;
 };
 
+export type SummaryComparison = "to-date" | "full";
+
+/** GET /transactions/summary */
+export type MonthlySummary = {
+  month: string; // "2026-10"
+  /** Current month: 1st..today vs 1st..same day last month. Past months: full months. */
+  comparison: "month-to-date" | "full-month";
+  range: { from: string; to: string }; // [from, to) in UTC
+  previousRange: { from: string; to: string };
+  current: { income: number; expense: number };
+  previous: { income: number; expense: number };
+  /** % change vs the previous period; null when the previous period was 0 */
+  change: { income: number | null; expense: number | null };
+};
+
 /** Query params for GET /transactions */
 export type TransactionFilters = {
   from?: string; // ISO, inclusive
@@ -60,7 +75,40 @@ export const queryKeys = {
   transactionsAll: ["transactions"] as const,
   transactions: (filters: TransactionFilters = {}) =>
     ["transactions", filters] as const,
+  // Starts with "transactions", so saving a transaction refreshes it too
+  summary: (month: string, compare: SummaryComparison | "default" = "default") =>
+    ["transactions", "summary", month, compare] as const,
 };
+
+const monthKey = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+
+/**
+ * Income/expense totals and % change vs last month, calculated by the server.
+ * Sends the phone's UTC offset so months follow the user's time zone.
+ * For the current month the server compares month-to-date by default;
+ * pass compare="full" to compare whole months instead.
+ */
+export function useMonthlySummary(
+  month: Date = new Date(),
+  compare?: SummaryComparison,
+) {
+  const fetchAPI = useFetch();
+  const { authenticate } = useAuth();
+  const key = monthKey(month);
+  const tzOffset = -month.getTimezoneOffset(); // minutes east of UTC (IST = 330)
+  const params = new URLSearchParams({ month: key, tzOffset: String(tzOffset) });
+  if (compare) params.set("compare", compare);
+  return useQuery({
+    queryKey: queryKeys.summary(key, compare),
+    queryFn: async () =>
+      readJson<MonthlySummary>(
+        await fetchAPI(`${API_URL}/transactions/summary?${params}`, "GET"),
+      ),
+    enabled: !!authenticate.Token,
+    staleTime: 30 * 1000,
+  });
+}
 
 /* ---------- hooks ---------- */
 

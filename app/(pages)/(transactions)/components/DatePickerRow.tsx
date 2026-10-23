@@ -8,6 +8,8 @@ import SelectorRow from "./SelectorRow";
 interface DatePickerRowProps {
   date: Date;
   onChange: (newDate: Date) => void;
+  label?: string;
+  minimumDate?: Date;
 }
 
 // End of today: allows any time today but no future days. (Using "now" as the
@@ -34,7 +36,12 @@ const getFormattedDate = (selectedDate: Date) => {
   });
 };
 
-const DatePickerRow: React.FC<DatePickerRowProps> = ({ date, onChange }) => {
+const DatePickerRow: React.FC<DatePickerRowProps> = ({
+  date,
+  onChange,
+  label = "Date",
+  minimumDate,
+}) => {
   const [showPicker, setShowPicker] = useState(false);
 
   const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
@@ -55,7 +62,7 @@ const DatePickerRow: React.FC<DatePickerRowProps> = ({ date, onChange }) => {
   return (
     <>
       <SelectorRow
-        label="Date"
+        label={label}
         value={getFormattedDate(date)}
         icon="calendar-month-outline"
         onPress={handleOpenPicker}
@@ -67,6 +74,7 @@ const DatePickerRow: React.FC<DatePickerRowProps> = ({ date, onChange }) => {
           mode="date"
           display="default"
           maximumDate={endOfToday()}
+          minimumDate={minimumDate}
           onChange={handleDateChange}
         />
       )}

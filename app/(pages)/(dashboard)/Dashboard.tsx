@@ -9,11 +9,12 @@ import Recent_Transactions from "./components/Recent_Transactions";
 import {
   errorMessage,
   useCurrentUser,
+  useMonthlySummary,
   useTransactions,
 } from "@/services/queries";
 import ErrorBanner from "@/components/ErrorBanner";
-import { monthRange, startOfMonth } from "@/services/date";
-import { percentChange, summarize } from "@/services/transactions";
+import { monthRange } from "@/services/date";
+import { summarize } from "@/services/transactions";
 
 const getGreeting = () => {
   const hour = new Date().getHours();
@@ -31,16 +32,23 @@ const Dashboard = () => {
   const now = new Date();
   const month = now.toLocaleString("en-IN", { month: "long" }).toUpperCase();
 
-  // This month (totals + categories), last month (for the % badges), and the latest 5
+  // Totals + month-over-month % come from the server; this month's list feeds
+  // the category breakdown; plus the latest 5 for Recent
+  const summaryQuery = useMonthlySummary(now);
   const thisMonthQuery = useTransactions(monthRange(now));
-  const lastMonthQuery = useTransactions(monthRange(startOfMonth(now, -1)));
   const recentQuery = useTransactions({ limit: 5 });
 
   const current = summarize(thisMonthQuery.data ?? []);
-  const previous = summarize(lastMonthQuery.data ?? []);
+  const totals = summaryQuery.data?.current ?? current; // list totals until the summary arrives
+  const change = summaryQuery.data?.change ?? { income: null, expense: null };
+  // Month-to-date by default for the current month (1..today vs 1..same day last month)
+  const periodLabel =
+    summaryQuery.data?.comparison === "full-month"
+      ? "last month"
+      : "the same period last month";
 
   // One banner for any failed request; cached numbers stay visible underneath
-  const failedQuery = [thisMonthQuery, recentQuery, lastMonthQuery, userQuery].find(
+  const failedQuery = [summaryQuery, thisMonthQuery, recentQuery, userQuery].find(
     (q) => q.isError,
   );
   const showingSavedData =
@@ -108,10 +116,11 @@ const Dashboard = () => {
           />
         )}
         <IncomeExpense
-          income={current.income}
-          expense={current.expense}
-          incomeChange={percentChange(current.income, previous.income)}
-          expenseChange={percentChange(current.expense, previous.expense)}
+          income={totals.income}
+          expense={totals.expense}
+          incomeChange={change.income}
+          expenseChange={change.expense}
+          periodLabel={periodLabel}
         />
         <Spendings
           categories={current.expenseByCategory}

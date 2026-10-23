@@ -13,22 +13,31 @@ type StatCardProps = {
   change: number | null;
   /** true for income (going up is good), false for expenses */
   upIsGood: boolean;
+  /** What the % is compared with, for screen readers */
+  periodLabel?: string;
   textColor: string;
 };
 
-const StatCard = ({ label, value, change, upIsGood, textColor }: StatCardProps) => {
+const StatCard = ({
+  label,
+  value,
+  change,
+  upIsGood,
+  periodLabel,
+  textColor,
+}: StatCardProps) => {
   const { whole, fraction } = splitAmount(value);
-  const trend =
-    change === null || change === 0 || change > 0 === upIsGood
-      ? "positive"
-      : "negative";
   return (
     <BlurCard style={styles.card}>
       <View style={styles.card_header}>
         <Text style={{ fontSize: 12, opacity: 0.6, color: textColor }}>
           {label}
         </Text>
-        {change !== null && <Badge value={change} trend={trend} />}
+        <Badge
+          change={change}
+          higherIsBetter={upIsGood}
+          periodLabel={periodLabel}
+        />
       </View>
       <View style={styles.amount_row}>
         <Text
@@ -49,6 +58,8 @@ interface IncomeExpenseProps {
   expense: number;
   incomeChange: number | null;
   expenseChange: number | null;
+  /** e.g. "the same period last month" (month-to-date) or "last month" */
+  periodLabel?: string;
 }
 
 const IncomeExpense = ({
@@ -56,6 +67,7 @@ const IncomeExpense = ({
   expense,
   incomeChange,
   expenseChange,
+  periodLabel,
 }: IncomeExpenseProps) => {
   const { colors } = useTheme();
   const spentPct = income > 0 ? Math.round((expense / income) * 100) : 0;
@@ -84,6 +96,7 @@ const IncomeExpense = ({
           value={expense}
           change={expenseChange}
           upIsGood={false}
+          periodLabel={periodLabel}
           textColor={colors.text}
         />
         <StatCard
@@ -91,6 +104,7 @@ const IncomeExpense = ({
           value={income}
           change={incomeChange}
           upIsGood
+          periodLabel={periodLabel}
           textColor={colors.text}
         />
       </View>

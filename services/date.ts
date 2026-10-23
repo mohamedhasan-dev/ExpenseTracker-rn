@@ -44,17 +44,44 @@ export function formatRelativeDate(iso: string) {
   });
 }
 
-/** Section heading for a day: "Today" / "Yesterday" / "Mon, 14 Oct" */
+/** "22 Oct" */
+export const formatShortDate = (date: Date) =>
+  date.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+
+/** Section heading for a day: "Today · 22 Oct" / "Yesterday · 21 Oct" / "Mon, 19 Oct" */
 export function formatDayHeading(date: Date) {
   const ago = daysAgo(date);
-  if (ago === 0) return "Today";
-  if (ago === 1) return "Yesterday";
+  if (ago === 0) return `Today · ${formatShortDate(date)}`;
+  if (ago === 1) return `Yesterday · ${formatShortDate(date)}`;
   return date.toLocaleDateString("en-IN", {
     weekday: "short",
     day: "numeric",
     month: "short",
     ...(date.getFullYear() !== new Date().getFullYear() && { year: "numeric" }),
   });
+}
+
+/** Local midnight of `date` */
+export const startOfDay = (date: Date) =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+/** Local midnight `days` days after `date` */
+export const addDays = (date: Date, days: number) =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
+
+/** Monday of the week containing `date` (local midnight) */
+export const startOfWeek = (date: Date) => {
+  const day = startOfDay(date);
+  return addDays(day, -((day.getDay() + 6) % 7));
+};
+
+/** Whole local days from..to (inclusive) as an ISO window for GET /transactions */
+export function dayRange(from: Date, to: Date) {
+  const [first, last] = from <= to ? [from, to] : [to, from];
+  return {
+    from: startOfDay(first).toISOString(),
+    to: addDays(last, 1).toISOString(),
+  };
 }
 
 /** Local calendar day key, e.g. "2026-10-21" */

@@ -31,7 +31,7 @@ export default function amount(
     return `${sign}${SYMBOL}${parseFloat(abs.toFixed(decimals))}`;
   }
 
-  return `${sign}${SYMBOL}${abs.toLocaleString("en-IN", {
+  return `${sign} ${SYMBOL}${abs.toLocaleString("en-IN", {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   })}`;

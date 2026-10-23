@@ -50,11 +50,47 @@ export function summarize(transactions: Transaction[]) {
   };
 }
 
-/** % change from `previous` to `current`, or null when there is nothing to compare with */
-export const percentChange = (current: number, previous: number) =>
-  previous > 0
-    ? Math.round(((current - previous) / previous) * 1000) / 10
-    : null;
+export type TransactionTypeFilter = "All" | "Expense" | "Income";
+
+export type TransactionFilter = {
+  type: TransactionTypeFilter;
+  categoryIds: string[]; // empty = any category
+  paymentMethods: string[]; // empty = any method
+  search: string;
+};
+
+/** Type tab + category + payment method + free-text search (description, category, method, amount) */
+export function filterTransactions(
+  transactions: Transaction[],
+  filter: TransactionFilter,
+) {
+  const query = filter.search.trim().toLowerCase();
+  return transactions.filter((t) => {
+    if (filter.type !== "All" && isIncome(t) !== (filter.type === "Income")) {
+      return false;
+    }
+    if (
+      filter.categoryIds.length > 0 &&
+      !filter.categoryIds.includes(t.category?.id ?? "")
+    ) {
+      return false;
+    }
+    if (
+      filter.paymentMethods.length > 0 &&
+      !filter.paymentMethods.includes(t.paymentMethod)
+    ) {
+      return false;
+    }
+    if (query) {
+      const haystack = [t.description, t.category?.name, t.paymentMethod, t.amount]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      if (!haystack.includes(query)) return false;
+    }
+    return true;
+  });
+}
 
 export type DaySection = {
   key: string;
