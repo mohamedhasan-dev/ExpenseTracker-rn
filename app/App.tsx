@@ -32,7 +32,7 @@ const App = () => {
           backgroundColor: colors.background,
         }}
       >
-        <ActivityIndicator size="large" color={colors.accent} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }

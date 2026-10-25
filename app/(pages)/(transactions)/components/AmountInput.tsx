@@ -40,7 +40,7 @@ interface AmountInputProps {
 const AmountInput: React.FC<AmountInputProps> = ({ onChange, value, color }) => {
   const [isFocused, setIsFocused] = useState(false);
   const { colors } = useTheme();
-  const tint = color ?? colors.accent;
+  const tint = color ?? colors.expense;
 
   // 1. Custom blinking cursor, only animated while the field is focused
   const cursorOpacity = useSharedValue(1);
@@ -79,7 +79,7 @@ const AmountInput: React.FC<AmountInputProps> = ({ onChange, value, color }) => 
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.label, { color: colors.text }]}>AMOUNT</Text>
+      <Text style={[styles.label, { color: colors.textMuted }]}>AMOUNT</Text>
 
       {/* 3. Centered input wrapper */}
       <View style={styles.inputContainer}>
@@ -91,7 +91,7 @@ const AmountInput: React.FC<AmountInputProps> = ({ onChange, value, color }) => 
           <Text
             style={[
               styles.integerText,
-              { color: colors.text, opacity: isEmpty ? 0.35 : 1 },
+              { color: isEmpty ? colors.textMuted : colors.text },
             ]}
             numberOfLines={1}
             adjustsFontSizeToFit
@@ -99,7 +99,7 @@ const AmountInput: React.FC<AmountInputProps> = ({ onChange, value, color }) => 
             {displayInteger}
           </Text>
 
-          <Text style={[styles.decimalText, { color: colors.text }]}>
+          <Text style={[styles.decimalText, { color: colors.textMuted }]}>
             {displayDecimal}
           </Text>
 
@@ -154,7 +154,6 @@ const styles = StyleSheet.create({
     marginVertical: 32,
   },
   label: {
-    opacity: 0.5,
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 1.5,
@@ -188,7 +187,6 @@ const styles = StyleSheet.create({
     fontSize: 32, // Smaller, muted decimals
     fontWeight: "600",
     marginBottom: 6, // Slight offset to align visually with the large integer baseline
-    opacity: 0.45,
   },
   cursor: {
     width: 3,

@@ -5,7 +5,7 @@ import { API_URL } from "@/services/api";
 import { isApiError, readJson } from "@/services/http";
 
 // Re-exported so screens can import everything data-related from one place
-export { ApiError, errorMessage } from "@/services/http";
+export { ApiError, errorMessage, staleDataMessage } from "@/services/http";
 
 const HOUR = 60 * 60 * 1000;
 

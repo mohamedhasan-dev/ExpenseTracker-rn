@@ -8,6 +8,7 @@ import Spendings from "./components/Spendings";
 import Recent_Transactions from "./components/Recent_Transactions";
 import {
   errorMessage,
+  staleDataMessage,
   useCurrentUser,
   useMonthlySummary,
   useTransactions,
@@ -75,13 +76,13 @@ const Dashboard = () => {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={colors.accent}
-          colors={[colors.accent]}
+          tintColor={colors.primary}
+          colors={[colors.primary]}
           progressBackgroundColor={colors.surface}
         />
       }
     >
-      <Text style={[styles.month, { color: colors.text }]}>{month}</Text>
+      <Text style={[styles.month, { color: colors.textMuted }]}>{month}</Text>
       <View style={styles.header}>
         <Text
           style={[styles.greetings, { color: colors.text }]}
@@ -93,24 +94,26 @@ const Dashboard = () => {
         <View
           style={[
             styles.avatar,
-            { borderColor: colors.accent, backgroundColor: colors.surface },
+            { borderColor: colors.accent, backgroundColor: colors.accent },
           ]}
         >
           {user ? (
-            <Text style={[styles.avatar_text, { color: colors.accent }]}>
+            <Text style={[styles.avatar_text, { color: colors.onAccent }]}>
               {user.charAt(0).toUpperCase()}
             </Text>
           ) : (
-            <MaterialCommunityIcons name="account" size={20} color={colors.accent} />
+            <MaterialCommunityIcons name="account" size={20} color={colors.onAccent} />
           )}
         </View>
       </View>
       <View style={styles.content}>
         {failedQuery && (
           <ErrorBanner
-            message={`${errorMessage(failedQuery.error, "Couldn't load your latest data.")}${
-              showingSavedData ? " Showing your last saved data." : ""
-            }`}
+            message={
+              showingSavedData
+                ? staleDataMessage(failedQuery.error)
+                : errorMessage(failedQuery.error, "Couldn't load your latest data.")
+            }
             onRetry={onRefresh}
             retrying={refreshing}
           />
@@ -148,7 +151,6 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   month: {
-    opacity: 0.55,
     fontSize: 12,
     fontWeight: "bold",
     letterSpacing: 0.5,

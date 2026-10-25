@@ -5,8 +5,15 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  BackHandler,
 } from "react-native";
-import React, { useState } from "react";
+import {
+  router,
+  useFocusEffect,
+  useLocalSearchParams,
+  useNavigation,
+} from "expo-router";
+import React, { useCallback, useState } from "react";
 import useTheme from "@/hooks/useTheme";
 import SegmentedToggle from "./components/SegmentedToggle";
 import AmountInput, { parseAmount } from "./components/AmountInput";
@@ -15,7 +22,7 @@ import StandardInput from "@/components/StandardInput";
 import DatePickerRow from "./components/DatePickerRow";
 import PaymentSelector from "./components/PaymentSelector";
 import PrimaryButton from "@/components/PrimaryButton";
-import BackButton, { goBackOrHome } from "@/components/BackButton";
+import BackButton from "@/components/BackButton";
 import {
   errorMessage,
   useCreateTransaction,
@@ -28,6 +35,33 @@ const TYPES = ["Expense", "Income"] as const;
 const AddTransaction = () => {
   const { colors } = useTheme();
   const createTransaction = useCreateTransaction();
+  const navigation = useNavigation();
+  // "list" = opened from the Transactions list's button; otherwise from the navbar's +
+  const { from } = useLocalSearchParams<{ from?: string }>();
+
+  /** Return to wherever Add Transaction was opened from */
+  const close = useCallback(() => {
+    if (from === "list" && navigation.canGoBack()) {
+      navigation.goBack(); // back to the Transactions list underneath
+      return;
+    }
+    // Opened with the navbar's +: go back to the previous tab (Home, Budget, ...).
+    // The tab's stack then resets to the list (popToTopOnBlur in (pages)/_layout).
+    const tabs = navigation.getParent();
+    if (tabs?.canGoBack()) tabs.goBack();
+    else router.navigate("/Dashboard");
+  }, [from, navigation]);
+
+  // Android back gesture/button behaves exactly like the on-screen back button
+  useFocusEffect(
+    useCallback(() => {
+      const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+        close();
+        return true;
+      });
+      return () => sub.remove();
+    }, [close]),
+  );
 
   // Form state
   const [transactionType, setTransactionType] =
@@ -71,9 +105,8 @@ const AddTransaction = () => {
       },
       {
         onSuccess: () => {
-          // This screen stays mounted inside its tab, so clear it for next time
           resetForm();
-          goBackOrHome();
+          close();
         },
       },
     );
@@ -88,7 +121,7 @@ const AddTransaction = () => {
       <View style={{ flex: 1, padding: 24 }}>
         {/* --- STICKY TOP SECTION --- */}
         <View style={styles.header}>
-          <BackButton />
+          <BackButton onPress={close} />
           <Text style={[styles.title, { color: colors.text }]}>
             Add Transaction
           </Text>
@@ -113,7 +146,7 @@ const AddTransaction = () => {
             value={amountText}
             onChange={setAmountText}
             color={
-              transactionType === "Expense" ? colors.accent : colors.primary
+              transactionType === "Expense" ? colors.expense : colors.primary
             }
           />
           <CategoryGrid
@@ -123,7 +156,11 @@ const AddTransaction = () => {
           />
           <StandardInput
             label="Description"
-            placeholder="e.g. Lunch at restaurant"
+            placeholder={
+              transactionType === "Income"
+                ? "e.g. October salary"
+                : "e.g. Lunch at restaurant"
+            }
             value={description}
             onChangeText={setDescription}
             maxLength={255}
@@ -136,7 +173,7 @@ const AddTransaction = () => {
           />
 
           {createTransaction.isError && (
-            <Text style={[styles.error, { color: colors.accent }]}>
+            <Text style={[styles.error, { color: colors.warning }]}>
               {errorMessage(
                 createTransaction.error,
                 "Couldn't save the transaction. Please try again.",

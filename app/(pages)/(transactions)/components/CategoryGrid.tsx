@@ -44,7 +44,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>
+      <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>
         CATEGORY
       </Text>
 
@@ -63,7 +63,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
       ) : isPending ? (
         // First launch only: nothing cached yet
         <View style={styles.status}>
-          <ActivityIndicator color={colors.accent} />
+          <ActivityIndicator color={colors.primary} />
         </View>
       ) : isError ? (
         <Pressable
@@ -72,16 +72,16 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
           disabled={isRefetching}
         >
           {isRefetching ? (
-            <ActivityIndicator color={colors.accent} />
+            <ActivityIndicator color={colors.primary} />
           ) : (
-            <Text style={{ color: colors.text, opacity: 0.6, textAlign: "center" }}>
+            <Text style={{ color: colors.textMuted, textAlign: "center" }}>
               {errorMessage(error, "Couldn't load categories.")} Tap to retry.
             </Text>
           )}
         </Pressable>
       ) : (
         <View style={styles.status}>
-          <Text style={{ color: colors.text, opacity: 0.6 }}>
+          <Text style={{ color: colors.textMuted }}>
             No categories yet
           </Text>
         </View>
@@ -95,7 +95,6 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   sectionTitle: {
-    opacity: 0.5,
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 1.5,

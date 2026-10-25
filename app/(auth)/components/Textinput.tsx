@@ -52,7 +52,7 @@ const Textinput = (props: TextInputProps) => {
       color: colors.text,
       fontSize:17,
       borderBottomColor: props.isWrongCred
-        ? "red"
+        ? colors.warning
         : focused
           ? colors.primary
           : colors.secondary,
@@ -67,7 +67,7 @@ const Textinput = (props: TextInputProps) => {
       <Animated.View style={[styles.inputlabel, labelStyle]}>
         <Text
           style={{
-            color: props.isWrongCred ? "red" : "hsl(192, 73%, 40%)",
+            color: props.isWrongCred ? colors.warning : colors.primary,
             fontSize: 15,
             fontWeight: "bold",
           }}

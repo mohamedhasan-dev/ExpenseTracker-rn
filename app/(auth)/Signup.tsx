@@ -134,7 +134,7 @@ const Signup = () => {
           <Text
             accessibilityLiveRegion="polite"
             style={{
-              color: "hsl(0, 85%, 72%)",
+              color: colors.warning,
               fontSize: 14,
               textAlign: "center",
               maxWidth: 320,
@@ -156,7 +156,7 @@ const Signup = () => {
         >
           <Text
             style={{
-              color: "hsl(355, 53%, 24%)",
+              color: colors.onAccent,
               fontSize: 20,
               fontWeight: "bold",
             }}
@@ -168,7 +168,7 @@ const Signup = () => {
           style={{
             fontSize: 20,
             marginTop: 15,
-            color: colors.primary,
+            color: colors.textMuted,
             fontWeight: "300",
           }}
         >
@@ -176,8 +176,8 @@ const Signup = () => {
           <Text
             onPress={goToLogin}
             style={{
-              color: colors.accent,
-              fontWeight: "500",
+              color: colors.primary,
+              fontWeight: "700",
             }}
           >
             Login

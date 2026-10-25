@@ -11,11 +11,6 @@ interface BadgeProps {
   periodLabel?: string;
 }
 
-const TONES = {
-  good: { background: "hsl(201, 41%, 32%)", text: "hsl(198, 100%, 59%)" },
-  bad: { background: "hsla(358, 43%, 37%, 0.89)", text: "hsl(358, 78%, 65%)" },
-};
-
 /** "+8.4%", "-12%", "+150%", "+999+%" style label */
 const formatChange = (change: number) => {
   const abs = Math.abs(change);
@@ -39,8 +34,8 @@ const Badge = ({ change, higherIsBetter = true, periodLabel = "last month" }: Ba
     change === 0
       ? { background: colors.surface2, text: colors.text }
       : change > 0 === higherIsBetter
-        ? TONES.good
-        : TONES.bad;
+        ? { background: colors.incomeSoft, text: colors.primary }
+        : { background: colors.expenseSoft, text: colors.expense };
   const label = formatChange(change);
   const spoken =
     change === 0

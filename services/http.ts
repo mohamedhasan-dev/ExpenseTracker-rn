@@ -102,6 +102,20 @@ export function errorMessage(
   return fallback;
 }
 
+/** Short banner text for a failed refresh while older data is still on screen */
+export function staleDataMessage(error: unknown) {
+  if (isNetworkError(error)) {
+    return error.timedOut
+      ? "Showing saved data (server is slow)."
+      : "Showing saved data (can't reach server).";
+  }
+  if (isSessionExpired(error)) return "Showing saved data (session expired).";
+  if (isApiError(error) && error.status >= 500) {
+    return "Showing saved data (server error).";
+  }
+  return "Showing saved data (couldn't refresh).";
+}
+
 /** Only retry failures that might succeed on a second try */
 export const shouldRetry = (failureCount: number, error: unknown) => {
   if (isSessionExpired(error)) return false;

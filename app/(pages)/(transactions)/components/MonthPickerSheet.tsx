@@ -38,7 +38,8 @@ const MonthPickerSheet = ({ visible, selected, onSelect, onClose }: MonthPickerS
               style={({ pressed }) => [
                 styles.row,
                 {
-                  backgroundColor: active ? colors.surface2 : "transparent",
+                  backgroundColor: active ? colors.accentSoft : "transparent",
+                  borderColor: active ? colors.accent : "transparent",
                   opacity: pressed ? 0.8 : 1,
                 },
               ]}
@@ -46,13 +47,13 @@ const MonthPickerSheet = ({ visible, selected, onSelect, onClose }: MonthPickerS
               <Text
                 style={[
                   styles.label,
-                  { color: active ? colors.accent : colors.text },
+                  { color: active ? colors.accentText : colors.text },
                 ]}
               >
                 {formatMonth(item)}
               </Text>
               {active && (
-                <MaterialCommunityIcons name="check" size={20} color={colors.accent} />
+                <MaterialCommunityIcons name="check" size={20} color={colors.accentText} />
               )}
             </Pressable>
           );
@@ -73,6 +74,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 14,
     borderRadius: 12,
+    borderWidth: 1,
   },
   label: {
     fontSize: 15,

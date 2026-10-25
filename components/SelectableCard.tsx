@@ -36,7 +36,7 @@ const SelectableCard: React.FC<SelectableCardProps> = ({
           width: flex ? undefined : CARD_WIDTH,
           flex: flex,
           height: height,
-          backgroundColor: isActive ? "hsla(348, 100%, 61%, 0.1)" : colors.surface2,
+          backgroundColor: isActive ? colors.accentSoft : colors.surface2,
           borderColor: isActive ? colors.accent : "transparent",
           borderWidth: 1,
           opacity: pressed ? 0.8 : 1,
@@ -47,14 +47,14 @@ const SelectableCard: React.FC<SelectableCardProps> = ({
         <MaterialCommunityIcons
           name={icon}
           size={28}
-          color={isActive ? colors.accent : colors.text}
+          color={isActive ? colors.accentText : colors.text}
         />
       )}
       <Text
         style={[
           styles.label,
           { 
-            color: isActive ? colors.accent : colors.text,
+            color: isActive ? colors.accentText : colors.text,
             marginTop: icon ? 8 : 0, // Removes gap if there is no icon
             fontSize: labelSize,
           },

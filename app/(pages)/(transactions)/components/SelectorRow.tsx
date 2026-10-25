@@ -20,7 +20,7 @@ const SelectorRow: React.FC<SelectorRowProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+      <Text style={[styles.label, { color: colors.textMuted }]}>{label}</Text>
 
       <Pressable
         onPress={onPress}
@@ -36,8 +36,7 @@ const SelectorRow: React.FC<SelectorRowProps> = ({
         <MaterialCommunityIcons
           name={icon}
           size={24}
-          color={colors.text}
-          style={{ opacity: 0.6 }} // Mutes the icon slightly so it isn't distracting
+          color={colors.textMuted}
         />
       </Pressable>
     </View>
@@ -49,7 +48,6 @@ const styles = StyleSheet.create({
     marginTop: 24, 
   },
   label: {
-    opacity: 0.5,
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 1.5,

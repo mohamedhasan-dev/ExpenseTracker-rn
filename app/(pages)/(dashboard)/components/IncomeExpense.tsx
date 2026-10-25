@@ -26,11 +26,12 @@ const StatCard = ({
   periodLabel,
   textColor,
 }: StatCardProps) => {
+  const { colors } = useTheme();
   const { whole, fraction } = splitAmount(value);
   return (
     <BlurCard style={styles.card}>
       <View style={styles.card_header}>
-        <Text style={{ fontSize: 12, opacity: 0.6, color: textColor }}>
+        <Text style={{ fontSize: 12, color: colors.textMuted }}>
           {label}
         </Text>
         <Badge
@@ -47,7 +48,7 @@ const StatCard = ({
         >
           {whole}
         </Text>
-        <Text style={[styles.fraction, { color: textColor }]}>{fraction}</Text>
+        <Text style={[styles.fraction, { color: colors.textMuted }]}>{fraction}</Text>
       </View>
     </BlurCard>
   );
@@ -86,7 +87,7 @@ const IncomeExpense = ({
         <Text style={[styles.title, { color: colors.text }]}>
           Income & Expenses
         </Text>
-        <Text style={{ color: colors.text, opacity: 0.4, fontSize: 12 }}>
+        <Text style={{ color: colors.textMuted, fontSize: 12 }}>
           this month
         </Text>
       </View>
@@ -118,13 +119,13 @@ const IncomeExpense = ({
           fillColor={colors.accent}
         />
         <View style={styles.footer}>
-          <Text style={[styles.footer_text, { color: colors.text }]}>
+          <Text style={[styles.footer_text, { color: colors.textMuted }]}>
             {summary}
           </Text>
           <Text
             style={[
               styles.footer_text,
-              { color: left < 0 ? colors.accent : colors.text },
+              { color: left < 0 ? colors.expense : colors.textMuted },
             ]}
           >
             {left < 0 ? `${amount(-left)} over` : `${amount(left)} left`}
@@ -182,7 +183,6 @@ const styles = StyleSheet.create({
   fraction: {
     fontSize: 15,
     fontWeight: "500",
-    opacity: 0.45,
   },
   footer: {
     flexDirection: "row",
@@ -190,7 +190,6 @@ const styles = StyleSheet.create({
   },
   footer_text: {
     fontSize: 12,
-    opacity: 0.64,
   },
 });
 

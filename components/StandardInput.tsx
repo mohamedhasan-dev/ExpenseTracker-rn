@@ -16,12 +16,12 @@ const StandardInput: React.FC<StandardInputProps> = ({
   label,
   ...props
 }) => {
-  const { colors, isDarkMode } = useTheme();
+  const { colors } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+      <Text style={[styles.label, { color: colors.textMuted }]}>{label}</Text>
 
       <View
         style={[
@@ -38,9 +38,7 @@ const StandardInput: React.FC<StandardInputProps> = ({
           {...props}
           // Spread first so the focus handlers below aren't overridden by props
           style={[styles.input, { color: colors.text }, props.style]}
-          placeholderTextColor={
-            isDarkMode ? "hsla(186, 70%, 91%, 0.6)" : "hsla(210, 26%, 15%, 0.45)"
-          }
+          placeholderTextColor={colors.textMuted}
           onFocus={(e) => {
             setIsFocused(true);
             props.onFocus?.(e);
@@ -60,7 +58,6 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   label: {
-    opacity: 0.5,
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 1.5,

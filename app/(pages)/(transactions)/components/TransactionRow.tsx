@@ -17,8 +17,9 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 interface TransactionRowProps {
   transaction: Transaction;
   /**
-   * "compact" (Dashboard card): "Food · Today, 2:40 pm", expenses in text colour.
-   * "history" (Transactions list, grouped by day): "UPI · Food", expenses in accent.
+   * "compact" (Dashboard card): "Food · Today, 2:40 pm".
+   * "history" (Transactions list, grouped by day): "UPI · Food".
+   * Amounts: income in primary (mist blue), expenses in expense (blossom red) everywhere.
    */
   variant?: "compact" | "history";
 }
@@ -49,11 +50,7 @@ const TransactionRow = ({
           .join(" · ")
       : `${categoryName} · ${formatRelativeDate(t.date)}`;
 
-  const amountColor = income
-    ? colors.primary
-    : variant === "history"
-      ? colors.accent
-      : colors.text;
+  const amountColor = income ? colors.primary : colors.expense;
 
   return (
     <View
@@ -75,7 +72,7 @@ const TransactionRow = ({
         <MaterialCommunityIcons
           name={icon}
           size={20}
-          color={income ? colors.primary : colors.accent}
+          color={amountColor}
         />
       </View>
 
@@ -83,7 +80,7 @@ const TransactionRow = ({
         <Text numberOfLines={1} style={[styles.title, { color: colors.text }]}>
           {title}
         </Text>
-        <Text numberOfLines={1} style={[styles.meta, { color: colors.text }]}>
+        <Text numberOfLines={1} style={[styles.meta, { color: colors.textMuted }]}>
           {meta}
         </Text>
       </View>
@@ -116,7 +113,6 @@ const styles = StyleSheet.create({
   },
   meta: {
     fontSize: 12,
-    opacity: 0.55,
     marginTop: 2,
   },
   amount: {

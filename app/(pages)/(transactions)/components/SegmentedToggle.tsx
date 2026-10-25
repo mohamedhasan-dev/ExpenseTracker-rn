@@ -84,7 +84,7 @@ function SegmentedToggle<T extends string>({
             <Text
               style={[
                 styles.optionText,
-                { color: colors.text, opacity: isActive ? 1 : 0.5 },
+                { color: isActive ? colors.text : colors.textMuted },
               ]}
             >
               {option}

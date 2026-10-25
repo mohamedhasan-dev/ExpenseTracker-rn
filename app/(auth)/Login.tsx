@@ -83,7 +83,7 @@ const Login = () => {
       boxShadow: "0px 1px 10px hsl(358, 47%, 10%)",
     },
     error: {
-      color: "hsl(0, 85%, 72%)",
+      color: colors.warning,
       fontSize: 14,
       textAlign: "center",
       maxWidth: 320,
@@ -144,7 +144,7 @@ const Login = () => {
         >
           <Text
             style={{
-              color: "hsl(186, 70%, 70%)",
+              color: colors.onAccent,
               fontSize: 20,
               fontWeight: "bold",
             }}
@@ -156,7 +156,7 @@ const Login = () => {
           style={{
             fontSize: 20,
             marginTop: 15,
-            color: colors.primary,
+            color: colors.textMuted,
             fontWeight: "300",
             textAlign: "center",
           }}
@@ -165,8 +165,8 @@ const Login = () => {
           <Pressable onPress={() => router.push("/(auth)/Signup")}>
             <Text
               style={{
-                color: colors.accent,
-                fontWeight: "400",
+                color: colors.primary,
+                fontWeight: "700",
                 fontSize:20
               }}
             >

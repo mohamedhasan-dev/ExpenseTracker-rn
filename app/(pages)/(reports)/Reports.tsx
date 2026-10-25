@@ -6,7 +6,7 @@ const Reports = () => {
   const { colors } = useTheme();
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <Text style={{ color: colors.text, opacity: 0.6 }}>Reports</Text>
+      <Text style={{ color: colors.textMuted }}>Reports</Text>
     </View>
   );
 };

@@ -5,14 +5,14 @@ import useTheme from "@/hooks/useTheme";
 import amount from "../../services/amount";
 
 interface TransactionsSummaryProps {
-  /** e.g. "October 2026", "Today", "This week", "12 Oct – 18 Oct" */
+  /** e.g. "Oct 2026", "Today", "This week", "12 Oct – 18 Oct" */
   periodLabel: string;
   income: number;
   expense: number;
   onPressPeriod: () => void;
 }
 
-/** One compact card: period, total expenses (focus), income and the difference */
+/** One row: period selector (left), income | expense totals (right), divider below */
 const TransactionsSummary = ({
   periodLabel,
   income,
@@ -20,111 +20,110 @@ const TransactionsSummary = ({
   onPressPeriod,
 }: TransactionsSummaryProps) => {
   const { colors } = useTheme();
-  const net = income - expense;
-  const netLabel =
-    net === 0 ? amount(0) : `${net > 0 ? "+" : "\u2212"}${amount(Math.abs(net))}`;
+
+  const total = (
+    label: string,
+    value: number,
+    dot: string,
+    valueColor: string,
+  ) => (
+    <View style={styles.total}>
+      <View style={styles.labelRow}>
+        <View style={[styles.dot, { backgroundColor: dot }]} />
+        <Text style={[styles.label, { color: colors.textMuted }]}>{label}</Text>
+      </View>
+      <Text style={[styles.value, { color: valueColor }]} numberOfLines={1}>
+        {amount(value)}
+      </Text>
+    </View>
+  );
 
   return (
-    <View
-      style={[
-        styles.card,
-        { backgroundColor: colors.surface, borderColor: colors.surface2 },
-      ]}
-    >
+    <View style={[styles.container, { borderBottomColor: colors.surface2 }]}>
       <Pressable
         onPress={onPressPeriod}
         hitSlop={8}
         accessibilityRole="button"
         accessibilityLabel={`Period: ${periodLabel}. Change month`}
-        style={styles.periodRow}
+        style={({ pressed }) => [styles.period, { opacity: pressed ? 0.6 : 1 }]}
       >
-        <Text style={[styles.period, { color: colors.text }]} numberOfLines={1}>
+        <Text
+          style={[styles.periodText, { color: colors.text }]}
+          numberOfLines={1}
+        >
           {periodLabel.toUpperCase()}
         </Text>
-        <MaterialCommunityIcons name="chevron-down" size={20} color={colors.text} style={{ opacity: 0.7 }} />
+        <MaterialCommunityIcons
+          name="chevron-down"
+          size={18}
+          color={colors.textMuted}
+        />
       </Pressable>
 
-      <Text style={[styles.label, { color: colors.text }]}>Total expenses</Text>
-      <Text
-        style={[styles.total, { color: colors.text }]}
-        numberOfLines={1}
-        adjustsFontSizeToFit
-      >
-        {amount(expense)}
-      </Text>
-
-      <View style={[styles.divider, { backgroundColor: colors.surface2 }]} />
-
-      <View style={styles.bottomRow}>
-        <View style={styles.flexCell}>
-          <Text style={[styles.label, { color: colors.text }]}>Income</Text>
-          <Text
-            style={[styles.value, { color: colors.primary }]}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-          >
-            {amount(income)}
-          </Text>
-        </View>
-        <View style={[styles.flexCell, { alignItems: "flex-end" }]}>
-          <Text style={[styles.label, { color: colors.text }]}>Difference</Text>
-          <Text
-            style={[styles.value, { color: net < 0 ? colors.accent : colors.text }]}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-          >
-            {netLabel}
-          </Text>
-        </View>
+      <View style={styles.totals}>
+        {total("Expense", expense, colors.expense, colors.expense)}
+        <View
+          style={[styles.separator, { backgroundColor: colors.surface2 }]}
+        />
+        {total("Income", income, colors.primary, colors.primary)}
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  card: {
-    borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
-    padding: 16,
-  },
-  periodRow: {
+  container: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 14,
+    gap: 12,
+    paddingTop: 4,
+    paddingBottom: 18,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   period: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     flexShrink: 1,
-    fontSize: 12,
+  },
+  periodText: {
+    flexShrink: 1,
+    fontSize: 13,
     fontWeight: "600",
-    letterSpacing: 0.8,
-    opacity: 0.8,
+    letterSpacing: 2,
+    opacity: 0.85,
+  },
+  totals: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    marginLeft: "auto",
+  },
+  total: {
+    alignItems: "flex-end",
+  },
+  labelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   label: {
     fontSize: 12,
-    opacity: 0.55,
-  },
-  total: {
-    fontSize: 28,
-    fontWeight: "700",
-    marginTop: 6,
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    marginVertical: 14,
-  },
-  bottomRow: {
-    flexDirection: "row",
-    gap: 16,
-  },
-  flexCell: {
-    flex: 1,
-    minWidth: 0,
   },
   value: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "700",
     marginTop: 4,
+    fontVariant: ["tabular-nums"],
+  },
+  separator: {
+    width: StyleSheet.hairlineWidth,
+    alignSelf: "stretch",
   },
 });
 

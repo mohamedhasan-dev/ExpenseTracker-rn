@@ -38,13 +38,13 @@ const Spendings = ({ categories, total }: SpendingsProps) => {
         <Text style={[styles.title, { color: colors.text }]}>
           Spend by Category
         </Text>
-        <Text style={{ color: colors.text, opacity: 0.4, fontSize: 12 }}>
+        <Text style={{ color: colors.textMuted, fontSize: 12 }}>
           {categories.length} active
         </Text>
       </View>
 
       {total <= 0 ? (
-        <Text style={[styles.empty, { color: colors.text }]}>
+        <Text style={[styles.empty, { color: colors.textMuted }]}>
           No expenses this month yet
         </Text>
       ) : (
@@ -61,7 +61,7 @@ const Spendings = ({ categories, total }: SpendingsProps) => {
               <View key={item.label} style={{ gap: 6 }}>
                 <View style={styles.legend_row}>
                   <Text
-                    style={{ color: colors.text, opacity: 0.7, fontSize: 13, flexShrink: 1 }}
+                    style={{ color: colors.textMuted, fontSize: 13, flexShrink: 1 }}
                     numberOfLines={1}
                   >
                     {item.label}
@@ -124,7 +124,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   empty: {
-    opacity: 0.55,
     textAlign: "center",
     paddingVertical: 24,
   },

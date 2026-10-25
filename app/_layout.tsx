@@ -41,12 +41,12 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
       <Text style={{ color: colors.text, fontSize: 20, fontWeight: "700" }}>
         Something went wrong
       </Text>
-      <Text style={{ color: colors.text, opacity: 0.7, textAlign: "center" }}>
+      <Text style={{ color: colors.textMuted, textAlign: "center" }}>
         The app ran into an unexpected problem. Try again, and restart the app
         if it keeps happening.
       </Text>
       {__DEV__ && (
-        <Text style={{ color: colors.accent, fontSize: 12, textAlign: "center" }}>
+        <Text style={{ color: colors.warning, fontSize: 12, textAlign: "center" }}>
           {error.message}
         </Text>
       )}
@@ -61,7 +61,7 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
           backgroundColor: colors.accent,
         }}
       >
-        <Text style={{ color: "#fff", fontWeight: "700" }}>Try again</Text>
+        <Text style={{ color: colors.onAccent, fontWeight: "700" }}>Try again</Text>
       </Pressable>
     </View>
   );

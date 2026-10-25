@@ -9,6 +9,9 @@ export const goBackOrHome = () => {
   else router.navigate("/Dashboard");
 };
 
+/** Switches to the Home tab (used where "back" must always mean Home) */
+export const goHome = () => router.navigate("/Dashboard");
+
 const BackButton = ({ onPress = goBackOrHome }: { onPress?: () => void }) => {
   const { colors } = useTheme();
   return (

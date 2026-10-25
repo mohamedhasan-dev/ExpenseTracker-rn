@@ -47,9 +47,6 @@ export const countActiveFilters = (f: AdvancedFilters) =>
 
 const PAYMENT_METHODS: PaymentMethod[] = ["Cash", "UPI", "Card", "Bank"];
 
-// Same active tint as SelectableCard on the Add Transaction screen
-const ACTIVE_TINT = "hsla(348, 100%, 61%, 0.1)";
-
 type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 const toIcon = (name: string): IconName =>
   name in MaterialCommunityIcons.glyphMap ? (name as IconName) : "shape-outline";
@@ -66,7 +63,8 @@ const Chip = ({
   onPress: () => void;
 }) => {
   const { colors } = useTheme();
-  const tint = active ? colors.accent : colors.text;
+  // Selected = crimson border + soft tint, same as SelectableCard on the Add Transaction screen
+  const tint = active ? colors.accentText : colors.text;
   return (
     <Pressable
       onPress={onPress}
@@ -75,7 +73,7 @@ const Chip = ({
       style={({ pressed }) => [
         styles.chip,
         {
-          backgroundColor: active ? ACTIVE_TINT : colors.surface2,
+          backgroundColor: active ? colors.accentSoft : colors.surface2,
           borderColor: active ? colors.accent : "transparent",
           opacity: pressed ? 0.8 : 1,
         },
@@ -91,7 +89,7 @@ const Chip = ({
 
 const SectionTitle = ({ children }: { children: string }) => {
   const { colors } = useTheme();
-  return <Text style={[styles.sectionTitle, { color: colors.text }]}>{children}</Text>;
+  return <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>{children}</Text>;
 };
 
 const toggle = <T,>(list: T[], value: T) =>
@@ -159,7 +157,7 @@ const FilterSheet = ({
           { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 },
         ]}
       >
-        <Text style={[styles.footerText, { color: "#FFFFFF" }]}>Apply filters</Text>
+        <Text style={[styles.footerText, { color: colors.onAccent }]}>Apply filters</Text>
       </Pressable>
     </View>
   );
@@ -221,10 +219,10 @@ const FilterSheet = ({
             ))}
           </View>
         ) : categoriesQuery.isPending ? (
-          <ActivityIndicator style={styles.status} color={colors.accent} />
+          <ActivityIndicator style={styles.status} color={colors.primary} />
         ) : (
           <Pressable style={styles.status} onPress={() => categoriesQuery.refetch()}>
-            <Text style={[styles.statusText, { color: colors.text }]}>
+            <Text style={[styles.statusText, { color: colors.textMuted }]}>
               {categoriesQuery.isError
                 ? `${errorMessage(categoriesQuery.error, "Couldn't load categories.")} Tap to retry.`
                 : "No categories yet"}
@@ -252,7 +250,6 @@ const FilterSheet = ({
 
 const styles = StyleSheet.create({
   sectionTitle: {
-    opacity: 0.5,
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 1.5,
@@ -288,7 +285,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   statusText: {
-    opacity: 0.6,
+    textAlign: "center",
   },
   footer: {
     flexDirection: "row",

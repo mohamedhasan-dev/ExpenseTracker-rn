@@ -6,12 +6,15 @@ interface PrimaryButtonProps {
   label: string;
   onPress: () => void;
   disabled?: boolean;
+  /** "filled" = crimson main action; "outline" = quieter/destructive (e.g. Log out) */
+  variant?: "filled" | "outline";
 }
 
 const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   label,
   onPress,
   disabled = false,
+  variant = "filled",
 }) => {
   const { colors } = useTheme();
 
@@ -21,8 +24,14 @@ const PrimaryButton: React.FC<PrimaryButtonProps> = ({
       style={({ pressed }) => [
         styles.button,
         {
-          // Greys out the button if it's disabled, otherwise uses your accent color
-          backgroundColor: disabled ? colors.surface2 : colors.accent,
+          // Greyed out when disabled; crimson fill, or a blossom-red outline
+          backgroundColor: disabled
+            ? colors.surface2
+            : variant === "outline"
+              ? "transparent"
+              : colors.accent,
+          borderWidth: variant === "outline" ? 1 : 0,
+          borderColor: colors.expense,
           opacity: pressed && !disabled ? 0.8 : 1,
         },
       ]}
@@ -31,8 +40,11 @@ const PrimaryButton: React.FC<PrimaryButtonProps> = ({
         style={[
           styles.label,
           {
-            color: disabled ? colors.text : "#FFFFFF",
-            opacity: disabled ? 0.5 : 1,
+            color: disabled
+              ? colors.textMuted
+              : variant === "outline"
+                ? colors.expense
+                : colors.onAccent,
           },
         ]}
       >

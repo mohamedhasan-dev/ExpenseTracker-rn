@@ -41,8 +41,7 @@ const PieChartComponent = ({
           <View style={{ alignItems: "center" }}>
             <Text
               style={{
-                color: colors.text,
-                opacity: 0.55,
+                color: colors.textMuted,
                 fontSize: 10,
                 fontWeight: "600",
                 letterSpacing: 1,

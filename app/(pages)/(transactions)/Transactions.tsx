@@ -2,15 +2,20 @@ import {
   View,
   Text,
   StyleSheet,
-  SectionList,
   Pressable,
   RefreshControl,
   ActivityIndicator,
   TextInput,
+  Animated,
+  BackHandler,
 } from "react-native";
-import React, { useDeferredValue, useMemo, useState } from "react";
+import React, { useCallback, useDeferredValue, useMemo, useState } from "react";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { router, useFocusEffect } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import useTheme from "@/hooks/useTheme";
+import BackButton, { goHome } from "@/components/BackButton";
+import type { Transaction } from "@/services/queries";
 import SegmentedToggle from "./components/SegmentedToggle";
 import TransactionRow from "./components/TransactionRow";
 import TransactionsSummary from "./components/TransactionsSummary";
@@ -20,11 +25,12 @@ import FilterSheet, {
   defaultFilters,
 } from "./components/FilterSheet";
 import MonthPickerSheet from "./components/MonthPickerSheet";
-import { errorMessage, useTransactions } from "@/services/queries";
+import { errorMessage, staleDataMessage, useTransactions } from "@/services/queries";
 import ErrorBanner from "@/components/ErrorBanner";
 import {
   dayRange,
   formatMonth,
+  formatShortMonth,
   formatShortDate,
   isSameMonth,
   monthRange,
@@ -71,7 +77,36 @@ function getPeriodLabel(filters: AdvancedFilters, month: Date) {
 }
 
 const Transactions = () => {
-  const { colors, isDarkMode } = useTheme();
+  const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
+
+  // Collapsing summary: driven by the list's scroll position on the native thread
+  const [scrollY] = useState(() => new Animated.Value(0));
+  const [summaryHeight, setSummaryHeight] = useState(120);
+  const summaryStyle = {
+    opacity: scrollY.interpolate({
+      inputRange: [0, summaryHeight * 0.8],
+      outputRange: [1, 0],
+      extrapolate: "clamp",
+    }),
+    transform: [
+      {
+        // Moves slower than the list (parallax) so it reads as collapsing, not just scrolling
+        translateY: scrollY.interpolate({
+          inputRange: [0, summaryHeight],
+          outputRange: [0, summaryHeight * 0.4],
+          extrapolate: "clamp",
+        }),
+      },
+      {
+        scale: scrollY.interpolate({
+          inputRange: [0, summaryHeight],
+          outputRange: [1, 0.92],
+          extrapolate: "clamp",
+        }),
+      },
+    ],
+  };
 
   // Screen state: month, type tab, search, sheet filters, which sheet is open
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
@@ -80,6 +115,18 @@ const Transactions = () => {
   const deferredSearch = useDeferredValue(search); // keeps typing smooth on long lists
   const [filters, setFilters] = useState<AdvancedFilters>(defaultFilters);
   const [sheet, setSheet] = useState<"filters" | "month" | null>(null);
+
+  // This list is only reached from Home, so back (button or Android gesture) always
+  // returns to the Home tab instead of whatever happens to be in the history
+  useFocusEffect(
+    useCallback(() => {
+      const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+        goHome();
+        return true;
+      });
+      return () => sub.remove();
+    }, []),
+  );
 
   const query = useTransactions(getRange(filters, month));
   const { isPending, isError, error, refetch, isRefetching } = query;
@@ -118,12 +165,19 @@ const Transactions = () => {
 
   const listHeader = (
     <View>
-      <TransactionsSummary
-        periodLabel={periodLabel}
-        income={totals.income}
-        expense={totals.expense}
-        onPressPeriod={() => setSheet("month")}
-      />
+      <Animated.View
+        style={summaryStyle}
+        onLayout={(e) => setSummaryHeight(e.nativeEvent.layout.height)}
+      >
+        <TransactionsSummary
+          periodLabel={
+            filters.datePreset === "month" ? formatShortMonth(month) : periodLabel
+          }
+          income={totals.income}
+          expense={totals.expense}
+          onPressPeriod={() => setSheet("month")}
+        />
+      </Animated.View>
 
       <SegmentedToggle options={TYPE_TABS} activeOption={typeTab} onChange={setTypeTab} />
 
@@ -135,15 +189,12 @@ const Transactions = () => {
             { backgroundColor: colors.surface, borderColor: colors.surface2 },
           ]}
         >
-          <MaterialCommunityIcons name="magnify" size={20} color={colors.text} style={{ opacity: 0.55 }} />
+          <MaterialCommunityIcons name="magnify" size={20} color={colors.textMuted} />
           <TextInput
             value={search}
             onChangeText={setSearch}
             placeholder="Search transactions..."
-            // Same muted placeholder as StandardInput on the Add Transaction screen
-            placeholderTextColor={
-              isDarkMode ? "hsla(186, 70%, 91%, 0.45)" : "hsla(210, 26%, 15%, 0.45)"
-            }
+            placeholderTextColor={colors.textMuted}
             style={[styles.searchInput, { color: colors.text }]}
             returnKeyType="search"
             autoCorrect={false}
@@ -157,7 +208,7 @@ const Transactions = () => {
               accessibilityRole="button"
               accessibilityLabel="Clear search"
             >
-              <MaterialCommunityIcons name="close-circle" size={18} color={colors.text} style={{ opacity: 0.55 }} />
+              <MaterialCommunityIcons name="close-circle" size={18} color={colors.textMuted} />
             </Pressable>
           )}
         </View>
@@ -179,12 +230,12 @@ const Transactions = () => {
           <MaterialCommunityIcons
             name="tune-variant"
             size={18}
-            color={activeFilterCount > 0 ? colors.accent : colors.text}
+            color={colors.text}
           />
           <Text
             style={[
               styles.filterText,
-              { color: activeFilterCount > 0 ? colors.accent : colors.text },
+              { color: colors.text },
             ]}
           >
             Filter
@@ -199,7 +250,7 @@ const Transactions = () => {
 
       {activeFilterCount > 0 && (
         <View style={styles.activeRow}>
-          <Text style={[styles.muted, { color: colors.text }]}>
+          <Text style={[styles.muted, { color: colors.textMuted }]}>
             {plural(activeFilterCount, "filter")} active
           </Text>
           <Pressable
@@ -207,7 +258,7 @@ const Transactions = () => {
             onPress={() => setFilters(defaultFilters())}
             accessibilityRole="button"
           >
-            <Text style={[styles.link, { color: colors.accent }]}>Clear filters</Text>
+            <Text style={[styles.link, { color: colors.primary }]}>Clear filters</Text>
           </Pressable>
         </View>
       )}
@@ -215,7 +266,7 @@ const Transactions = () => {
       {staleError && (
         <View style={{ marginTop: 12 }}>
           <ErrorBanner
-            message={`${errorMessage(error, "Couldn't refresh.")} Showing saved data.`}
+            message={staleDataMessage(error)}
             onRetry={() => refetch()}
             retrying={isRefetching}
           />
@@ -224,7 +275,7 @@ const Transactions = () => {
 
       <View style={styles.historyRow}>
         <Text style={[styles.historyTitle, { color: colors.text }]}>History</Text>
-        <Text style={[styles.muted, { color: colors.text }]}>
+        <Text style={[styles.muted, { color: colors.textMuted }]}>
           {isNarrowed ? plural(visible.length, "result") : "Newest first"}
         </Text>
       </View>
@@ -232,32 +283,32 @@ const Transactions = () => {
   );
 
   const emptyState = isPending ? (
-    <ActivityIndicator style={styles.empty} color={colors.accent} />
+    <ActivityIndicator style={styles.empty} color={colors.primary} />
   ) : isError ? (
     <Pressable style={styles.empty} onPress={() => refetch()}>
-      <Text style={[styles.emptyText, { color: colors.text }]}>
+      <Text style={[styles.emptyText, { color: colors.textMuted }]}>
         {errorMessage(error, "Couldn't load transactions.")} Tap to retry.
       </Text>
     </Pressable>
   ) : data.length > 0 ? (
     // There is data for the period, but search/filters hide all of it
     <View style={styles.empty}>
-      <Text style={[styles.emptyText, { color: colors.text }]}>
+      <Text style={[styles.emptyText, { color: colors.textMuted }]}>
         No transactions match your search or filters.
       </Text>
       <Pressable hitSlop={8} onPress={clearAll} accessibilityRole="button">
-        <Text style={[styles.link, { color: colors.accent, marginTop: 8 }]}>
+        <Text style={[styles.link, { color: colors.primary, marginTop: 8 }]}>
           Clear search and filters
         </Text>
       </Pressable>
     </View>
   ) : (
     <View style={styles.empty}>
-      <Text style={[styles.emptyText, { color: colors.text }]}>
+      <Text style={[styles.emptyText, { color: colors.textMuted }]}>
         No transactions {filters.datePreset === "month" ? `in ${periodLabel}` : `for ${periodLabel.toLowerCase()}`}.
       </Text>
       <Text style={[styles.emptyText, { color: colors.text, marginTop: 4 }]}>
-        Tap + to add one.
+        Tap Add Transaction to add one.
       </Text>
     </View>
   );
@@ -266,9 +317,11 @@ const Transactions = () => {
     <View style={styles.root}>
       {/* Header */}
       <View style={styles.header}>
+        {/* The navbar is hidden on this screen, so keep an explicit way back */}
+        <BackButton onPress={goHome} />
         <View style={{ flex: 1 }}>
           <Text style={[styles.title, { color: colors.text }]}>Transactions</Text>
-          <Text style={[styles.subtitle, { color: colors.text }]}>Track your money</Text>
+          <Text style={[styles.subtitle, { color: colors.textMuted }]}>Track your money</Text>
         </View>
         <Pressable
           onPress={() => setSheet("month")}
@@ -287,15 +340,19 @@ const Transactions = () => {
         </Pressable>
       </View>
 
-      <SectionList
+      <Animated.SectionList
         sections={sections}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item: Transaction) => item.id}
         ListHeaderComponent={listHeader}
-        renderItem={({ item }) => <TransactionRow transaction={item} variant="history" />}
+        renderItem={({ item }: { item: Transaction }) => (
+          <TransactionRow transaction={item} variant="history" />
+        )}
         renderSectionHeader={({ section }) => (
           <View
             style={[
               styles.sectionHeader,
+              // Opaque so rows scroll underneath while the day header is pinned
+              { backgroundColor: colors.background },
               section.key !== sections[0]?.key && {
                 borderTopWidth: StyleSheet.hairlineWidth,
                 borderTopColor: colors.surface2,
@@ -304,12 +361,21 @@ const Transactions = () => {
             ]}
           >
             <Text style={[styles.sectionTitle, { color: colors.text }]}>{section.title}</Text>
-            <Text style={[styles.muted, { color: colors.text }]}>
+            <Text style={[styles.muted, { color: colors.textMuted }]}>
               {plural(section.data.length, "transaction")}
             </Text>
           </View>
         )}
-        stickySectionHeadersEnabled={false}
+        // Day headers ("Today · 22 Oct") pin to the top while that day's rows scroll
+        stickySectionHeadersEnabled
+        initialNumToRender={12}
+        maxToRenderPerBatch={12}
+        windowSize={11}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true },
+        )}
+        scrollEventThrottle={16}
         ListEmptyComponent={emptyState}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
@@ -319,12 +385,29 @@ const Transactions = () => {
           <RefreshControl
             refreshing={isRefetching && !isPending}
             onRefresh={() => refetch()}
-            tintColor={colors.accent}
-            colors={[colors.accent]}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
             progressBackgroundColor={colors.surface}
           />
         }
       />
+
+      {/* Pinned primary action (the navbar and its + are hidden on this screen) */}
+      <View style={[styles.addBar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() =>
+            router.push({ pathname: "/AddTransaction", params: { from: "list" } })
+          }
+          style={({ pressed }) => [
+            styles.addButton,
+            { backgroundColor: colors.accent, opacity: pressed ? 0.85 : 1 },
+          ]}
+        >
+          <MaterialCommunityIcons name="plus" size={20} color={colors.onAccent} />
+          <Text style={styles.addText}>Add Transaction</Text>
+        </Pressable>
+      </View>
 
       <FilterSheet
         visible={sheet === "filters"}
@@ -370,7 +453,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 12,
-    opacity: 0.55,
     marginTop: 2,
   },
   calendarButton: {
@@ -446,7 +528,6 @@ const styles = StyleSheet.create({
   },
   muted: {
     fontSize: 12,
-    opacity: 0.55,
   },
   link: {
     fontSize: 13,
@@ -464,15 +545,30 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   listContent: {
-    paddingBottom: 24,
+    paddingBottom: 16,
     flexGrow: 1,
+  },
+  addBar: {
+    paddingTop: 10,
+  },
+  addButton: {
+    height: 52,
+    borderRadius: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  addText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
   },
   empty: {
     paddingVertical: 40,
     alignItems: "center",
   },
   emptyText: {
-    opacity: 0.55,
     textAlign: "center",
   },
 });

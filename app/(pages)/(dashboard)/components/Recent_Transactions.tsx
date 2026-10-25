@@ -24,7 +24,7 @@ const Recent_Transactions = ({
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>Recent</Text>
         <Pressable hitSlop={8} onPress={() => router.navigate("/Transactions")}>
-          <Text style={[styles.see_all, { color: colors.accent }]}>
+          <Text style={[styles.see_all, { color: colors.primary }]}>
             See all
           </Text>
         </Pressable>
@@ -33,13 +33,13 @@ const Recent_Transactions = ({
       <View style={[styles.card, { backgroundColor: colors.surface }]}>
         {transactions.length === 0 &&
           (isLoading ? (
-            <ActivityIndicator style={styles.empty} color={colors.accent} />
+            <ActivityIndicator style={styles.empty} color={colors.primary} />
           ) : hasError ? (
-            <Text style={[styles.empty, { color: colors.text }]}>
+            <Text style={[styles.empty, { color: colors.textMuted }]}>
               Couldn&apos;t load your transactions.
             </Text>
           ) : (
-            <Text style={[styles.empty, { color: colors.text }]}>
+            <Text style={[styles.empty, { color: colors.textMuted }]}>
               No transactions yet. Tap + to add one.
             </Text>
           ))}
@@ -71,7 +71,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   empty: {
-    opacity: 0.55,
     textAlign: "center",
     paddingVertical: 16,
   },

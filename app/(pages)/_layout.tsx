@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Tabs } from "expo-router";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import { StackActions } from "@react-navigation/native";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import {
   LayoutRectangle,
@@ -58,8 +59,11 @@ export function Navbar({ state, navigation }: BottomTabBarProps) {
     (focusedRoute?.params as { screen?: string } | undefined)?.screen;
   const isAddActive =
     activeRoute === "(transactions)" && nestedScreen === "AddTransaction";
+  // The Transactions list is a full-screen history view with its own
+  // "Add Transaction" button, so the navbar is hidden there (not on Add Transaction)
+  const hideNavbar = activeRoute === "(transactions)" && !isAddActive;
 
-  const goTo = (name: string, screen?: string) => {
+  const goTo = (name: string) => {
     const route = state.routes.find((r) => r.name === name);
     if (!route) return;
     // Lets the tab's stack pop back to its first screen when re-pressed
@@ -69,9 +73,35 @@ export function Navbar({ state, navigation }: BottomTabBarProps) {
       canPreventDefault: true,
     });
     if (event.defaultPrevented) return;
-    if (screen) navigation.navigate(name, { screen });
-    else if (activeRoute !== name) navigation.navigate(name);
+    if (activeRoute !== name) navigation.navigate(name);
   };
+
+  // The + button: Add Transaction on top of the Transactions list
+  const openAddTransaction = () => {
+    if (isAddActive) return;
+    const stack = state.routes.find((r) => r.name === "(transactions)")?.state;
+    if (stack && !stack.stale && stack.type === "stack") {
+      // The tab is already mounted (it's preloaded): push onto its stack and switch to
+      // it in the same tick, so there's a single render with Add Transaction on top.
+      // Navigating with nested params instead shows the list (and hides this navbar)
+      // for a frame before the push, which made the + button flicker and restart.
+      navigation.dispatch({ ...StackActions.push("AddTransaction"), target: stack.key });
+      navigation.navigate("(transactions)");
+    } else {
+      // Not mounted yet: initial: false builds the stack as [Transactions, AddTransaction]
+      navigation.navigate("(transactions)", { screen: "AddTransaction", initial: false });
+    }
+  };
+
+  // Mount the (transactions) tab in the background once the app is idle, so the first
+  // "See all" / + press doesn't pay for building that screen on the tap.
+  const transactionsMounted =
+    state.routes.find((r) => r.name === "(transactions)")?.state !== undefined;
+  useEffect(() => {
+    if (transactionsMounted) return;
+    const id = requestIdleCallback(() => navigation.preload("(transactions)"));
+    return () => cancelIdleCallback(id);
+  }, [transactionsMounted, navigation]);
 
   /* ---------- sliding highlight pill ---------- */
   const [layouts, setLayouts] = useState<Record<string, LayoutRectangle>>({});
@@ -83,19 +113,19 @@ export function Navbar({ state, navigation }: BottomTabBarProps) {
     const layout = activeRoute ? layouts[activeRoute] : undefined;
     if (!layout) {
       // e.g. on the Add Transaction screen: no tab to highlight
-      pillOpacity.value = withTiming(0, SLIDE);
+      pillOpacity.set(withTiming(0, SLIDE));
       pillVisible.current = false;
       return;
     }
     const x = layout.x + PILL_INSET;
     if (pillVisible.current) {
       // slide from the previous tab
-      pillX.value = withTiming(x, SLIDE);
+      pillX.set(withTiming(x, SLIDE));
     } else {
       // first show: appear in place instead of flying in from the left
-      pillX.value = x;
+      pillX.set(x);
     }
-    pillOpacity.value = withTiming(1, SLIDE);
+    pillOpacity.set(withTiming(1, SLIDE));
     pillVisible.current = true;
   }, [activeRoute, layouts, pillX, pillOpacity]);
 
@@ -129,7 +159,7 @@ export function Navbar({ state, navigation }: BottomTabBarProps) {
 
   useEffect(() => {
     if (isAddActive) {
-      glow.value = withSequence(
+      glow.set(withSequence(
         withTiming(1, { duration: 300, easing: Easing.out(Easing.quad) }),
         withRepeat(
           withSequence(
@@ -138,10 +168,10 @@ export function Navbar({ state, navigation }: BottomTabBarProps) {
           ),
           -1,
         ),
-      );
+      ));
     } else {
       cancelAnimation(glow);
-      glow.value = withTiming(0, { duration: 300 });
+      glow.set(withTiming(0, { duration: 300 }));
     }
   }, [isAddActive, glow]);
 
@@ -180,6 +210,8 @@ export function Navbar({ state, navigation }: BottomTabBarProps) {
       </Pressable>
     );
   };
+
+  if (hideNavbar) return null;
 
   return (
     <View style={[styles.wrapper, { backgroundColor: colors.background }]}>
@@ -229,18 +261,19 @@ export function Navbar({ state, navigation }: BottomTabBarProps) {
           accessibilityLabel="Add transaction"
           accessibilityRole="button"
           accessibilityState={{ selected: isAddActive }}
-          onPress={() => goTo("(transactions)", "AddTransaction")}
+          onPress={openAddTransaction}
+          // .set() instead of `.value =` so the React Compiler can still optimise this component
           onPressIn={() => {
-            fabScale.value = withSpring(0.92, { damping: 15, stiffness: 300 });
-            pressGlow.value = withTiming(1, { duration: 150 });
+            fabScale.set(withSpring(0.92, { damping: 15, stiffness: 300 }));
+            pressGlow.set(withTiming(1, { duration: 150 }));
           }}
           onPressOut={() => {
-            fabScale.value = withSpring(1, { damping: 12, stiffness: 220 });
-            pressGlow.value = withTiming(0, { duration: 400 });
+            fabScale.set(withSpring(1, { damping: 12, stiffness: 220 }));
+            pressGlow.set(withTiming(0, { duration: 400 }));
           }}
           style={[styles.fab, { backgroundColor: colors.accent }, fabStyle]}
         >
-          <MaterialCommunityIcons name="plus" size={30} color="#fff" />
+          <MaterialCommunityIcons name="plus" size={30} color={colors.onAccent} />
         </AnimatedPressable>
       </View>
     </View>
@@ -269,7 +302,9 @@ export default function PagesLayout() {
       <Tabs.Screen name="(budget)" />
       <Tabs.Screen name="(settings)" />
       {/* No tab button: reached via + and "See all" */}
-      <Tabs.Screen name="(transactions)" />
+      {/* Leaving this tab resets its stack to the Transactions list, so Add Transaction
+          never lingers underneath (or on top of) the list */}
+      <Tabs.Screen name="(transactions)" options={{ popToTopOnBlur: true }} />
     </Tabs>
   );
 }

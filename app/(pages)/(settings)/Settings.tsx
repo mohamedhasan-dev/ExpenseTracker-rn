@@ -25,20 +25,20 @@ const Settings = () => {
 
       {/* Account */}
       <View style={[styles.card, { backgroundColor: colors.surface }]}>
-        <View style={[styles.avatar, { borderColor: colors.accent }]}>
+        <View style={[styles.avatar, { borderColor: colors.accent, backgroundColor: colors.accent }]}>
           {user ? (
-            <Text style={[styles.avatarText, { color: colors.accent }]}>
+            <Text style={[styles.avatarText, { color: colors.onAccent }]}>
               {user.user_name.charAt(0).toUpperCase()}
             </Text>
           ) : (
-            <MaterialCommunityIcons name="account" size={24} color={colors.accent} />
+            <MaterialCommunityIcons name="account" size={24} color={colors.onAccent} />
           )}
         </View>
         <View style={{ flex: 1 }}>
           <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
             {user?.user_name ?? (userQuery.isPending ? "Loading..." : "Unknown user")}
           </Text>
-          <Text style={[styles.email, { color: colors.text }]} numberOfLines={1}>
+          <Text style={[styles.email, { color: colors.textMuted }]} numberOfLines={1}>
             {user?.email ?? " "}
           </Text>
         </View>
@@ -68,7 +68,7 @@ const Settings = () => {
         />
       </View>
 
-      <PrimaryButton label="Log out" onPress={confirmLogout} />
+      <PrimaryButton label="Log out" variant="outline" onPress={confirmLogout} />
     </View>
   );
 };
@@ -109,7 +109,6 @@ const styles = StyleSheet.create({
   },
   email: {
     fontSize: 13,
-    opacity: 0.6,
     marginTop: 2,
   },
   rowLabel: {

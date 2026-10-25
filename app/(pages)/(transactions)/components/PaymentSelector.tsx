@@ -27,7 +27,7 @@ const PaymentSelector: React.FC<PaymentSelectorProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.sectionTitle, { color: colors.text }]}>
+      <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>
         PAYMENT METHOD
       </Text>
 
@@ -53,7 +53,6 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   sectionTitle: {
-    opacity: 0.5,
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 1.5,
